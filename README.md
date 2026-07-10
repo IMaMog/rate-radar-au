@@ -28,7 +28,7 @@ data/snapshot.json  ──► static frontend (index.html + app.js)
   ISO-duration parsing, balance-tier maths (PER_TIER blending, overlapping-band dedupe),
   and bonus-rate semantics (see caveats).
 - **`data/snapshot.json`** — the daily snapshot the site reads. Refreshed by the GitHub
-  Action at the repo root (`.github/workflows/refresh-rates.yml`, 5:10am AEST daily).
+  Action (`.github/workflows/refresh-rates.yml`, 5:10am AEST daily).
 - **`api/refresh.js`** — Vercel serverless function for the "Refresh from bank" button:
   re-fetches a single brand live (brandId is resolved via the register — caller-supplied
   URLs are never fetched).

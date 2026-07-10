@@ -1,3 +1,4 @@
 node_modules/
 fetch-log.txt
 .vercel/
+.claude/
