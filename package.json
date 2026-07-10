@@ -1,0 +1,14 @@
+{
+  "name": "au-rate-radar",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Savings & term-deposit rates for every Australian ADI, via CDR Product Reference Data APIs",
+  "scripts": {
+    "fetch": "node fetcher/fetch.js",
+    "fetch:smoke": "node fetcher/fetch.js --limit 8"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

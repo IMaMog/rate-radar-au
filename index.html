@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rate Radar AU — every Australian bank's savings &amp; term deposit rates</title>
+  <meta name="description" content="Compare savings account and term deposit interest rates across every Australian ADI, sourced daily from official Open Banking (CDR) APIs." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📡</text></svg>" />
+  <link rel="stylesheet" href="styles.css" />
+  <script>
+    // Apply saved theme before first paint to avoid a flash.
+    const t = localStorage.getItem('theme');
+    if (t) document.documentElement.dataset.theme = t;
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-row">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M12 21a9 9 0 1 1 9-9" />
+            <path d="M12 17a5 5 0 1 1 5-5" />
+            <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none" />
+            <path d="M12 12l7-4" />
+          </svg>
+        </div>
+        <div>
+          <h1>Rate Radar <span class="au">AU</span></h1>
+          <p class="tagline">Savings &amp; term deposit rates from every Australian bank, via official Open Banking APIs</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span id="updated-badge" class="updated-badge" title=""></span>
+        <button id="theme-toggle" class="icon-btn" aria-label="Toggle dark mode" title="Toggle theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4 1.4-1.4"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div id="loading" class="loading-state">
+      <div class="spinner" aria-hidden="true"></div>
+      <p>Loading the latest rate snapshot…</p>
+    </div>
+    <div id="load-error" class="load-error" hidden>
+      <p>Couldn't load the rate snapshot. <button id="retry-load" class="link-btn">Try again</button></p>
+    </div>
+
+    <div id="app" hidden>
+      <!-- Stat tiles -->
+      <section class="stats" aria-label="Headline figures">
+        <div class="stat-tile">
+          <span class="stat-label">Top savings rate</span>
+          <span class="stat-value" id="stat-top-rate">—</span>
+          <span class="stat-sub" id="stat-top-rate-sub"></span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-label">Top no-conditions rate</span>
+          <span class="stat-value" id="stat-top-base">—</span>
+          <span class="stat-sub" id="stat-top-base-sub"></span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-label">Top 12-month term deposit</span>
+          <span class="stat-value" id="stat-top-td">—</span>
+          <span class="stat-sub" id="stat-top-td-sub"></span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-label">Coverage</span>
+          <span class="stat-value" id="stat-coverage">—</span>
+          <span class="stat-sub" id="stat-coverage-sub"></span>
+        </div>
+        <div class="stat-tile dist-tile">
+          <span class="stat-label" id="dist-label">Savings rate distribution</span>
+          <div id="dist-chart" class="dist-chart" role="img" aria-label="Histogram of savings rates"></div>
+          <div id="dist-tooltip" class="dist-tooltip" hidden></div>
+        </div>
+      </section>
+
+      <!-- Controls -->
+      <section class="controls" aria-label="Filters">
+        <div class="tabs" role="tablist">
+          <button class="tab active" role="tab" aria-selected="true" data-tab="savings">Savings accounts <span class="count" id="count-savings"></span></button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="td">Term deposits <span class="count" id="count-td"></span></button>
+        </div>
+        <div class="control-row">
+          <label class="balance-field">
+            <span class="field-label">Your balance</span>
+            <span class="currency-input">
+              <span class="currency-sign">$</span>
+              <input id="balance-input" type="text" inputmode="numeric" value="10,000" autocomplete="off" />
+            </span>
+          </label>
+          <div class="chip-row" id="balance-chips">
+            <button class="chip" data-amount="5000">$5k</button>
+            <button class="chip active" data-amount="10000">$10k</button>
+            <button class="chip" data-amount="25000">$25k</button>
+            <button class="chip" data-amount="50000">$50k</button>
+            <button class="chip" data-amount="100000">$100k</button>
+            <button class="chip" data-amount="250000">$250k</button>
+          </div>
+          <input id="search-input" class="search-input" type="search" placeholder="Search bank or account…" />
+          <label class="toggle-field" id="nostrings-field">
+            <input type="checkbox" id="nostrings-toggle" />
+            <span>No-strings only</span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Savings table -->
+      <section id="panel-savings" class="table-panel" role="tabpanel">
+        <div class="table-scroll">
+          <table class="rate-table" id="savings-table">
+            <thead>
+              <tr>
+                <th class="col-rank">#</th>
+                <th class="col-bank sortable" data-sort="bank">Bank</th>
+                <th class="col-product">Account</th>
+                <th class="col-rate sortable sorted-desc" data-sort="max">Max rate <span class="sort-note" id="at-balance-note"></span></th>
+                <th class="col-rate sortable" data-sort="base">Base rate</th>
+                <th class="col-cond">Bonus conditions</th>
+              </tr>
+            </thead>
+            <tbody id="savings-body"></tbody>
+          </table>
+        </div>
+        <p class="empty-note" id="savings-empty" hidden>No accounts match your filters.</p>
+      </section>
+
+      <!-- Term deposits table -->
+      <section id="panel-td" class="table-panel" role="tabpanel" hidden>
+        <div class="table-scroll">
+          <table class="rate-table" id="td-table">
+            <thead id="td-head"></thead>
+            <tbody id="td-body"></tbody>
+          </table>
+        </div>
+        <p class="empty-note" id="td-empty" hidden>No term deposits match your filters.</p>
+      </section>
+
+      <footer class="site-footer">
+        <p>
+          Rates are published by each bank under the Consumer Data Right (Open Banking) product
+          reference data standard and refreshed daily. Bonus rates require meeting the listed
+          conditions; always confirm on the bank's site before opening an account. Not financial advice.
+        </p>
+        <p id="failed-note" class="failed-note"></p>
+      </footer>
+    </div>
+  </main>
+
+  <!-- Detail drawer -->
+  <div id="drawer-backdrop" class="drawer-backdrop" hidden></div>
+  <aside id="drawer" class="drawer" hidden aria-label="Product details">
+    <div class="drawer-head">
+      <div class="drawer-title-group">
+        <div id="drawer-bank" class="drawer-bank"></div>
+        <h2 id="drawer-product"></h2>
+      </div>
+      <button id="drawer-close" class="icon-btn" aria-label="Close">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div id="drawer-body" class="drawer-body"></div>
+    <div class="drawer-foot">
+      <button id="drawer-refresh" class="btn secondary">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>
+        Refresh from bank
+      </button>
+      <a id="drawer-link" class="btn primary" target="_blank" rel="noopener">View at bank ↗</a>
+    </div>
+  </aside>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
