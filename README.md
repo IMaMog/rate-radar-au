@@ -60,6 +60,8 @@ Home loans (`lendingRates`):
   (solar panels etc.), not standard mortgages. This also drops the few genuine
   discounted-for-efficiency mortgages (Bank Australia, Gateway); refine `GREEN_ADDON_RX`
   in `fetcher/brand.js` if they should return.
+- Restricted-eligibility loans (bank staff, essential workers, veterans/DHOAS) are
+  excluded (`RESTRICTED_LOAN_RX`), as is the lender Family First (see `fetcher/fetch.js`).
 - The **Offset account** filter uses the product's published `features` (OFFSET), shown
   as a badge in the table.
 

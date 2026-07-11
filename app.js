@@ -24,7 +24,9 @@ const state = {
   mLvr: 80,
   mSearch: '',
   mOffset: false,
-  mSort: { key: 'var', dir: 1 }, // ascending: lower is better
+  mRateType: 'VARIABLE',
+  mFixedMonths: 24,
+  mSort: { key: 'rate', dir: 1 }, // ascending: lower is better
   mTerms: [],
   liveBrands: new Set(), // brands refreshed live this session
   drawerKey: null,
@@ -89,6 +91,13 @@ function initDerived() {
     .slice(0, 6)
     .map(e => e[0])
     .sort((a, b) => a - b);
+  if (!state.mTerms.includes(state.mFixedMonths)) state.mFixedMonths = state.mTerms[0] ?? 24;
+  $('term-chips').innerHTML = state.mTerms
+    .map(
+      m =>
+        `<button class="chip ${m === state.mFixedMonths ? 'active' : ''}" data-months="${m}">${m % 12 === 0 ? m / 12 + ' yr' : m + ' mo'}</button>`
+    )
+    .join('');
 
   const d = new Date(state.data.generatedAt);
   const hrs = Math.max(0, Math.round((Date.now() - d) / 36e5));
@@ -249,25 +258,21 @@ function loanFilters(months) {
   return { months, purpose: state.mPurpose, repayment: state.mRepay, lvr: state.mLvr };
 }
 
+const selectedMonths = () => (state.mRateType === 'FIXED' ? state.mFixedMonths : null);
+
 function loansRows() {
+  const months = selectedMonths();
   const rows = [];
   for (const p of state.data.mortgages || []) {
     if (state.mSearch && !(p.bank + ' ' + p.name).toLowerCase().includes(state.mSearch)) continue;
     if (state.mOffset && !p.offset) continue;
-    const variable = bestLendingRateAt(p.lending, loanFilters(null));
-    const byTerm = {};
-    let any = variable != null;
-    for (const m of state.mTerms) {
-      const r = bestLendingRateAt(p.lending, loanFilters(m));
-      byTerm[m] = r;
-      if (r != null) any = true;
-    }
-    if (any) rows.push({ p, variable, byTerm });
+    const entry = bestLendingRateAt(p.lending, loanFilters(months));
+    if (entry) rows.push({ p, entry });
   }
   const { key, dir } = state.mSort;
-  const val = r => (key === 'var' ? r.variable : r.byTerm[key])?.rate;
   rows.sort((a, b) => {
     if (key === 'bank') return dir * a.p.bank.localeCompare(b.p.bank);
+    const val = r => (key === 'comp' ? r.entry.comparison : r.entry.rate);
     const av = val(a) ?? (dir === 1 ? Infinity : -Infinity);
     const bv = val(b) ?? (dir === 1 ? Infinity : -Infinity);
     return dir * (av - bv) || a.p.bank.localeCompare(b.p.bank);
@@ -277,60 +282,50 @@ function loansRows() {
 
 const fmtLoanTerm = m => (m % 12 === 0 ? `${m / 12} yr fixed` : `${m} mo fixed`);
 
-function loanCell(entry, isBest) {
-  if (!entry) return '<td class="rate-cell">—</td>';
-  const comp = entry.comparison != null ? `<span class="comp">${fmtPct(entry.comparison)} comp</span>` : '';
-  return `<td class="rate-cell ${isBest ? 'rate-max' : ''}">${fmtPct(entry.rate)}${comp}</td>`;
-}
-
 function renderLoans(rows) {
   const sortCls = k =>
     state.mSort.key === k ? (state.mSort.dir === 1 ? 'sorted-asc' : 'sorted-desc') : '';
+  const months = selectedMonths();
+  const rateLabel = months == null ? 'Variable rate' : fmtLoanTerm(months);
   $('loans-head').innerHTML = `<tr>
     <th class="col-rank">#</th>
     <th class="col-bank sortable ${sortCls('bank')}" data-sort="bank">Lender</th>
     <th class="col-product">Loan</th>
-    <th class="col-rate sortable ${sortCls('var')}" data-sort="var">Variable</th>
-    ${state.mTerms.map(m => `<th class="col-rate sortable ${sortCls(m)}" data-sort="${m}">${fmtLoanTerm(m)}</th>`).join('')}
+    <th class="col-rate sortable ${sortCls('rate')}" data-sort="rate">${rateLabel}</th>
+    <th class="col-rate sortable ${sortCls('comp')}" data-sort="comp">Comparison rate</th>
   </tr>`;
 
-  // Lowest per column (lower is better for loans).
-  const bestVar = rows.reduce((mn, r) => Math.min(mn, r.variable?.rate ?? Infinity), Infinity);
-  const bestTerm = {};
-  for (const m of state.mTerms) {
-    bestTerm[m] = rows.reduce((mn, r) => Math.min(mn, r.byTerm[m]?.rate ?? Infinity), Infinity);
-  }
-
+  const bestRate = rows.reduce((mn, r) => Math.min(mn, r.entry.rate), Infinity);
   $('loans-body').innerHTML = rows
     .map(
       (r, i) => `<tr data-key="${esc(keyOf(r.p))}">
       <td class="col-rank">${i + 1}</td>
       <td>${bankCell(r.p)}</td>
       <td class="product-cell"><span class="product-name">${esc(r.p.name)}</span>${r.p.offset ? '<span class="badge badge-intro" title="Comes with an offset account">Offset</span>' : ''}</td>
-      ${loanCell(r.variable, r.variable && r.variable.rate === bestVar)}
-      ${state.mTerms.map(m => loanCell(r.byTerm[m], r.byTerm[m] && r.byTerm[m].rate === bestTerm[m])).join('')}
+      <td class="rate-cell ${r.entry.rate === bestRate ? 'rate-max' : ''}">${fmtPct(r.entry.rate)}</td>
+      <td class="rate-cell">${r.entry.comparison != null ? fmtPct(r.entry.comparison) : '—'}</td>
     </tr>`
     )
     .join('');
   $('loans-empty').hidden = rows.length > 0;
 }
 
-function renderLoanStats(rows) {
-  const pick = get => {
+function renderLoanStats() {
+  const lowestAt = months => {
     let best = null;
-    for (const r of rows) {
-      const v = get(r);
-      if (v != null && (best == null || v.rate < best.v.rate)) best = { v: { rate: v.rate }, r };
+    for (const p of state.data.mortgages || []) {
+      const r = bestLendingRateAt(p.lending, loanFilters(months));
+      if (r && (!best || r.rate < best.rate)) best = { ...r, p };
     }
     return best;
   };
   const setTile = (id, best) => {
-    $(id).textContent = best ? fmtPct(best.v.rate) : '—';
-    $(id + '-sub').textContent = best ? `${best.r.p.bank} · ${best.r.p.name}` : '';
+    $(id).textContent = best ? fmtPct(best.rate) : '—';
+    $(id + '-sub').textContent = best ? `${best.p.bank} · ${best.p.name}` : '';
   };
-  setTile('stat-low-var', pick(r => r.variable));
-  setTile('stat-low-3y', pick(r => r.byTerm[36]));
-  setTile('stat-low-5y', pick(r => r.byTerm[60]));
+  setTile('stat-low-var', lowestAt(null));
+  setTile('stat-low-3y', lowestAt(36));
+  setTile('stat-low-5y', lowestAt(60));
   const lenders = new Set((state.data.mortgages || []).map(m => m.brandId));
   $('stat-lenders').textContent = lenders.size;
   $('stat-lenders-sub').textContent = `${(state.data.mortgages || []).length} home loan products`;
@@ -604,9 +599,11 @@ const REPO_ISSUES = 'https://github.com/IMaMog/rate-radar-au/issues/new';
 
 function currentFilterSummary() {
   if (state.section === 'loans') {
-    return `${state.mPurpose === 'INVESTMENT' ? 'Investor' : 'Owner-occupier'} / ${
-      state.mRepay === 'INTEREST_ONLY' ? 'Interest only' : 'P&I'
-    } / ${state.mLvr ? `≤${state.mLvr}% LVR` : 'any LVR'}`;
+    return `${state.mRateType === 'FIXED' ? fmtLoanTerm(state.mFixedMonths) : 'Variable'} / ${
+      state.mPurpose === 'INVESTMENT' ? 'Investor' : 'Owner-occupier'
+    } / ${state.mRepay === 'INTEREST_ONLY' ? 'Interest only' : 'P&I'} / ${
+      state.mLvr ? `≤${state.mLvr}% LVR` : 'any LVR'
+    }`;
   }
   return `${state.tab === 'td' ? 'Term deposits' : 'Savings'} at ${fmtMoney(state.balance)}`;
 }
@@ -644,9 +641,8 @@ function renderAll() {
   renderSavings(savRows);
   renderTd(tdRows());
   renderStats(savRows);
-  const lRows = loansRows();
-  renderLoans(lRows);
-  renderLoanStats(lRows);
+  renderLoans(loansRows());
+  renderLoanStats();
 }
 
 function setSection(name) {
@@ -742,6 +738,17 @@ function segListener(id, apply) {
 segListener('purpose-seg', v => { state.mPurpose = v; });
 segListener('repay-seg', v => { state.mRepay = v; });
 segListener('lvr-chips', v => { state.mLvr = v === '' ? null : parseInt(v, 10); });
+segListener('ratetype-seg', v => {
+  state.mRateType = v;
+  $('term-field').hidden = v !== 'FIXED';
+});
+$('term-chips').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  for (const c of $('term-chips').querySelectorAll('.chip')) c.classList.toggle('active', c === chip);
+  state.mFixedMonths = parseInt(chip.dataset.months, 10);
+  renderAll();
+});
 
 $('loans-search').addEventListener('input', e => {
   state.mSearch = e.target.value.trim().toLowerCase();
@@ -751,8 +758,7 @@ $('loans-search').addEventListener('input', e => {
 $('loans-head').addEventListener('click', e => {
   const th = e.target.closest('th.sortable');
   if (!th) return;
-  const raw = th.dataset.sort;
-  const key = raw === 'bank' || raw === 'var' ? raw : parseInt(raw, 10);
+  const key = th.dataset.sort;
   const s = state.mSort;
   if (s.key === key) s.dir = -s.dir;
   else { s.key = key; s.dir = 1; }

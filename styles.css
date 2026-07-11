@@ -248,6 +248,7 @@ a { color: var(--accent-strong); }
 .loans-controls { padding-top: 14px; }
 #section-loans .controls { padding-top: 0; }
 .seg-field { display: flex; flex-direction: column; }
+.seg-field[hidden] { display: none; }
 .seg {
   display: inline-flex;
   border: 1px solid var(--baseline);

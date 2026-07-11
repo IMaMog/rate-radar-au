@@ -24,6 +24,8 @@ const started = Date.now();
 console.log('Fetching CDR register…');
 let brands = await fetchRegisterBrands();
 brands = brands.filter(b => !NON_RETAIL_BRAND_RX.test(b.name));
+// Explicitly excluded lenders.
+brands = brands.filter(b => !/^family first$/i.test(b.name.trim()));
 console.log(`${brands.length} retail brands with distinct product endpoints`);
 
 const brandFilter = argVal('--brand');

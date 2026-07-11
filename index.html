@@ -176,6 +176,17 @@
         <section class="controls" aria-label="Home loan filters">
           <div class="control-row loans-controls">
             <div class="seg-field">
+              <span class="field-label">Rate type</span>
+              <div class="seg" id="ratetype-seg">
+                <button class="active" data-value="VARIABLE">Variable</button>
+                <button data-value="FIXED">Fixed</button>
+              </div>
+            </div>
+            <div class="seg-field" id="term-field" hidden>
+              <span class="field-label">Fixed term</span>
+              <div class="chip-row" id="term-chips"></div>
+            </div>
+            <div class="seg-field">
               <span class="field-label">Loan purpose</span>
               <div class="seg" id="purpose-seg">
                 <button class="active" data-value="OWNER_OCCUPIED">Owner-occupier</button>

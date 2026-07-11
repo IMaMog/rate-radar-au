@@ -19,6 +19,10 @@ const NON_RETAIL_PRODUCT_RX = /\bbusiness\b|\bcorporate\b|\bintermediar/i;
 // Green/sustainability products are mostly small add-on loans (solar panels
 // etc.) rather than standard mortgages — excluded from the comparison.
 const GREEN_ADDON_RX = /green|sustainab|solar|\beco\b|clean energy/i;
+// Loans only specific people can get (bank staff, essential workers,
+// veterans / defence DHOAS). "Essentials" (a basic no-frills loan) is fine —
+// only "essential worker" is restricted.
+const RESTRICTED_LOAN_RX = /\bstaff\b|employee|essential worker|veteran|dhoas/i;
 
 export async function fetchBrandProducts(brand, { detailConcurrency = 5 } = {}) {
   const lists = await Promise.all(
@@ -58,6 +62,7 @@ export async function fetchBrandProducts(brand, { detailConcurrency = 5 } = {}) 
 
     if (d.productCategory === 'RESIDENTIAL_MORTGAGES') {
       if (GREEN_ADDON_RX.test(common.name || '')) return;
+      if (RESTRICTED_LOAN_RX.test(common.name || '')) return;
       const lending = normaliseLendingRates(d.lendingRates);
       if (!lending.length) return;
       // Headline for default sort: variable rate, owner-occupied P&I at 80% LVR.
