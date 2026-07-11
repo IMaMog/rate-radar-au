@@ -13,6 +13,26 @@ import {
 
 const CATEGORIES = ['TRANS_AND_SAVINGS_ACCOUNTS', 'TERM_DEPOSITS', 'RESIDENTIAL_MORTGAGES'];
 
+// Short chips for notable eligibility restrictions (who can open the product).
+// Universal ones (natural person, residency) are noise and skipped.
+function eligChips(eligibility) {
+  const out = [];
+  for (const e of eligibility || []) {
+    switch (e.eligibilityType) {
+      case 'MAX_AGE': out.push(`Under ${e.additionalValue || '?'}s`); break;
+      case 'MIN_AGE': out.push(`Ages ${e.additionalValue || '?'}+`); break;
+      case 'PENSION_RECIPIENT': out.push('Pensioners'); break;
+      case 'STAFF': out.push('Staff only'); break;
+      case 'STUDENT': out.push('Students'); break;
+      case 'EMPLOYMENT_STATUS':
+        out.push(e.additionalValue ? String(e.additionalValue).slice(0, 40) : 'Employment criteria');
+        break;
+      case 'BUSINESS_OWNER': out.push('Business owners'); break;
+    }
+  }
+  return out.length ? [...new Set(out)] : null;
+}
+
 // This is a retail comparison — skip business/wholesale brands and products.
 export const NON_RETAIL_BRAND_RX = /\bbusiness\b|\bwholesale\b|\bcorporate\b|intermediar/i;
 const NON_RETAIL_PRODUCT_RX = /\bbusiness\b|\bcorporate\b|\bintermediar/i;
@@ -58,6 +78,7 @@ export async function fetchBrandProducts(brand, { detailConcurrency = 5 } = {}) 
       name: d.name || stub.name,
       url: d.applicationUri || d.additionalInformation?.overviewUri || null,
       updated: d.lastUpdated || null,
+      elig: eligChips(d.eligibility),
     };
 
     if (d.productCategory === 'RESIDENTIAL_MORTGAGES') {

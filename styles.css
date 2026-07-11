@@ -350,6 +350,7 @@ td.rate-max { font-weight: 650; }
 .badge-intro { background: var(--accent-soft); color: var(--accent-strong); }
 [data-theme='dark'] .badge-intro { color: #b7d3f6; }
 .badge-nostrings { border: 1px solid var(--grid); color: var(--good); }
+.badge-elig { border: 1px solid var(--baseline); color: var(--ink-2); }
 .cond-cell {
   color: var(--ink-2); font-size: 13px;
   max-width: 330px;

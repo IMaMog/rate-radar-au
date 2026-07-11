@@ -126,6 +126,11 @@ function matchesSearch(p) {
   return (p.bank + ' ' + p.name).toLowerCase().includes(state.search);
 }
 
+const eligBadges = p =>
+  (p.elig || [])
+    .map(e => `<span class="badge badge-elig" title="Eligibility restriction">${esc(e)}</span>`)
+    .join('');
+
 // ---------- Savings ----------
 function savingsRows() {
   // The lowest-earning 10% of accounts at the current balance are always
@@ -173,7 +178,7 @@ function renderSavings(rows) {
       return `<tr data-key="${esc(keyOf(p))}">
         <td class="col-rank">${i + 1}</td>
         <td>${bankCell(p)}</td>
-        <td class="product-cell"><span class="product-name">${esc(p.name)}</span>${intro}</td>
+        <td class="product-cell"><span class="product-name">${esc(p.name)}</span>${intro}${eligBadges(p)}</td>
         <td class="rate-cell rate-max">${fmtPct(parts.max)}<span class="rate-bar" style="width:${barW}px"></span></td>
         <td class="rate-cell">${fmtPct(parts.base)}</td>
         <td><div class="cond-cell">${cond}</div></td>
@@ -239,7 +244,7 @@ function renderTd(rows) {
       (r, i) => `<tr data-key="${esc(keyOf(r.p))}">
       <td class="col-rank">${i + 1}</td>
       <td>${bankCell(r.p)}</td>
-      <td class="product-cell"><span class="product-name">${esc(r.p.name)}</span></td>
+      <td class="product-cell"><span class="product-name">${esc(r.p.name)}</span>${eligBadges(r.p)}</td>
       ${state.tdTerms
         .map(m => {
           const v = r.byTerm[m];
@@ -527,7 +532,7 @@ function renderDrawer(p) {
         .sort((a, b) => a.min - b.min)
         .map(t => bandLabel(t.min, t.max))
         .join('<br>');
-      const note = [r.value, r.info].filter(Boolean).join(' — ');
+      const note = [r.cond, r.value, r.info].filter(Boolean).join(' — ');
       body += `<tr>
         <td>${esc(r.type[0] + r.type.slice(1).toLowerCase().replace(/_/g, ' '))}</td>
         <td class="num">${fmtPct(r.rate)}</td>
@@ -549,6 +554,10 @@ function renderDrawer(p) {
       </tr>`;
     }
     body += '</tbody></table>';
+  }
+  if (p.elig?.length) {
+    body += `<div class="drawer-section-title">Who can open it</div>
+      <div class="cond-block">${esc(p.elig.join(' · '))}</div>`;
   }
   if (p.updated) {
     body += `<p class="note" style="color:var(--muted);font-size:12px;margin-top:14px">

@@ -16,9 +16,27 @@ export function durationToMonths(v) {
 }
 
 // ---------- Normalise one raw CDS depositRate row ----------
+// Friendly text for rate applicabilityConditions that come without prose.
+function conditionText(c) {
+  if (c.additionalInfo) return String(c.additionalInfo).slice(0, 300);
+  const t = c.rateApplicabilityType || '';
+  if (t === 'DEPOSIT_BALANCE_INCREASED') {
+    const v = parseFloat(c.additionalValue);
+    return `Balance must grow each month${Number.isFinite(v) && v > 1 ? ` by $${v.toLocaleString()}` : ''}`;
+  }
+  if (!t) return null;
+  return t.charAt(0) + t.slice(1).toLowerCase().replace(/_/g, ' ');
+}
+
 function normaliseRow(r) {
   const rate = parseFloat(r.rate);
   if (!Number.isFinite(rate)) return null;
+  const conds = [
+    ...(r.applicabilityConditions || []),
+    ...((r.tiers || []).flatMap(t => t.applicabilityConditions || [])),
+  ]
+    .map(conditionText)
+    .filter(Boolean);
   const tiers = (r.tiers || [])
     .filter(t => (t.unitOfMeasure || 'DOLLAR') === 'DOLLAR')
     .map(t => {
@@ -35,6 +53,8 @@ function normaliseRow(r) {
     // additionalValue is the condition text for BONUS, a duration for INTRODUCTORY/FIXED
     value: r.additionalValue ? String(r.additionalValue).slice(0, 600) : null,
     info: r.additionalInfo ? String(r.additionalInfo).slice(0, 600) : null,
+    // applicabilityConditions: strings a rate only pays if you meet
+    cond: conds.length ? [...new Set(conds)].join(' ').slice(0, 600) : null,
     freq: r.applicationFrequency || null,
   };
 }
@@ -53,7 +73,7 @@ export function normaliseDepositRates(depositRates) {
 // ---------- Effective-rate maths ----------
 // Group rows belonging to the same scheme (banks emit one row per balance tier).
 function schemeKey(row) {
-  return `${row.type}|${row.info || ''}|${row.type === 'INTRODUCTORY' ? '' : row.value || ''}`;
+  return `${row.type}|${row.info || ''}|${row.type === 'INTRODUCTORY' ? '' : row.value || ''}|${row.cond || ''}`;
 }
 
 // Rate a single scheme pays on `balance`, honouring tier method.
@@ -131,10 +151,16 @@ export function ratePartsAt(structures, balance = REF_BALANCE) {
     const r = schemeRateAt(rows, balance);
     if (r == null) continue;
     if (BASE_TYPES.has(type)) {
-      base = base == null ? r : Math.max(base, r);
+      if (rows[0].cond) {
+        // A "variable" rate with applicability conditions is conditional —
+        // treat it like a total-style bonus, not an unconditional base.
+        bonusGroups.push({ rate: r, text: rows[0].cond, isTotal: true });
+      } else {
+        base = base == null ? r : Math.max(base, r);
+      }
     } else if (type === 'BONUS') {
       // Some banks put an ISO duration (e.g. "P1M") where condition text belongs.
-      const texts = [rows[0].value, rows[0].info].filter(
+      const texts = [rows[0].cond, rows[0].value, rows[0].info].filter(
         t => t && !/^P[\dYMWD]+$/i.test(t.trim())
       );
       bonusGroups.push({ rate: r, text: texts[0] || '' });
@@ -147,7 +173,7 @@ export function ratePartsAt(structures, balance = REF_BALANCE) {
   let max = base, bonus = null, bonusConditions = null;
   for (const g of bonusGroups) {
     if (DISCRETIONARY_RX.test(g.text)) continue;
-    const candidate = TOTAL_RATE_RX.test(g.text)
+    const candidate = g.isTotal || TOTAL_RATE_RX.test(g.text)
       ? Math.max(base ?? 0, g.rate)
       : (base ?? 0) + g.rate;
     if (max == null || candidate > max) {
