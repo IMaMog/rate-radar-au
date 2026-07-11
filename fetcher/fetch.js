@@ -33,6 +33,7 @@ if (limit) brands = brands.slice(0, parseInt(limit, 10));
 
 const savings = [];
 const termDeposits = [];
+const mortgages = [];
 let failed = [];
 let done = 0;
 
@@ -40,6 +41,7 @@ async function harvest(brand, opts) {
   const r = await fetchBrandProducts(brand, opts);
   savings.push(...r.savings);
   termDeposits.push(...r.termDeposits);
+  mortgages.push(...r.mortgages);
   return r;
 }
 
@@ -48,7 +50,7 @@ await pool(brands, 8, async brand => {
     const r = await harvest(brand);
     done++;
     console.log(
-      `[${done}/${brands.length}] ${brand.name}: ${r.savings.length} savings, ${r.termDeposits.length} TDs`
+      `[${done}/${brands.length}] ${brand.name}: ${r.savings.length} savings, ${r.termDeposits.length} TDs, ${r.mortgages.length} loans`
     );
   } catch (e) {
     done++;
@@ -79,6 +81,7 @@ if (failed.length) {
 
 savings.sort((a, b) => (b.headline.max ?? 0) - (a.headline.max ?? 0));
 termDeposits.sort((a, b) => a.bank.localeCompare(b.bank));
+mortgages.sort((a, b) => (a.headlineVar ?? 99) - (b.headlineVar ?? 99));
 
 const snapshot = {
   generatedAt: new Date().toISOString(),
@@ -87,6 +90,7 @@ const snapshot = {
   failed,
   savings,
   termDeposits,
+  mortgages,
 };
 
 mkdirSync(dirname(OUT), { recursive: true });
@@ -94,6 +98,6 @@ writeFileSync(OUT, JSON.stringify(snapshot));
 const kb = Math.round(JSON.stringify(snapshot).length / 1024);
 console.log(
   `\nDone in ${Math.round((Date.now() - started) / 1000)}s — ` +
-    `${savings.length} savings products, ${termDeposits.length} TD products, ` +
+    `${savings.length} savings, ${termDeposits.length} TDs, ${mortgages.length} home loans, ` +
     `${failed.length} brands failed. Snapshot: ${kb} KB -> ${OUT}`
 );

@@ -104,6 +104,27 @@ a { color: var(--accent-strong); }
   padding: 5px 10px; border-radius: 999px;
   white-space: nowrap;
 }
+.section-switch {
+  position: relative;
+  display: inline-flex; align-items: center;
+}
+.section-switch select {
+  appearance: none; -webkit-appearance: none;
+  font: inherit; font-weight: 550; font-size: 13.5px;
+  color: var(--ink);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 30px 6px 14px;
+  cursor: pointer;
+}
+.section-switch select:hover { border-color: var(--baseline); }
+.section-switch select:focus-visible { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+.section-switch .chev {
+  position: absolute; right: 11px;
+  pointer-events: none; color: var(--muted);
+}
+
 .icon-btn {
   display: grid; place-items: center;
   width: 34px; height: 34px;
@@ -222,6 +243,34 @@ a { color: var(--accent-strong); }
   padding: 8px 0; cursor: pointer; user-select: none;
 }
 .toggle-field input { accent-color: var(--accent); width: 15px; height: 15px; }
+
+/* Segmented controls (home loans) */
+.loans-controls { padding-top: 14px; }
+#section-loans .controls { padding-top: 0; }
+.seg-field { display: flex; flex-direction: column; }
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--baseline);
+  border-radius: 9px;
+  overflow: hidden;
+}
+.seg button {
+  border: none; background: transparent;
+  padding: 7px 13px;
+  font-size: 13.5px; color: var(--ink-2);
+}
+.seg button + button { border-left: 1px solid var(--baseline); }
+.seg button:hover { background: var(--surface-2); }
+.seg button.active { background: var(--accent); color: #fff; }
+
+/* Comparison-rate subline in loan cells */
+.comp {
+  display: block;
+  font-size: 11px; font-weight: 400;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.stats-loans { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
 /* ---------- Tables ---------- */
 .table-panel {

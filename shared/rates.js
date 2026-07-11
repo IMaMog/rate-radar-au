@@ -188,3 +188,81 @@ export function bestTdRateAt(tdRates, months, deposit) {
 }
 
 export const fmtPct = r => (r == null ? '—' : (r * 100).toFixed(2) + '%');
+
+// ---------- Home loans (lendingRates) ----------
+const LENDING_SKIP = new Set(['PENALTY', 'FEE', 'CASH_ADVANCE', 'PURCHASE']);
+
+function normaliseLendingRow(r) {
+  if (LENDING_SKIP.has(r.lendingRateType)) return null;
+  const rate = parseFloat(r.rate);
+  if (!Number.isFinite(rate)) return null;
+  const comparison = parseFloat(r.comparisonRate);
+  const tiers = (r.tiers || []).map(t => {
+    const min = t.minimumValue != null ? parseFloat(t.minimumValue) : 0;
+    let max = t.maximumValue != null ? parseFloat(t.maximumValue) : null;
+    if (max != null && max <= min) max = null;
+    return { min, max, unit: t.unitOfMeasure || 'DOLLAR' };
+  });
+  return {
+    type: r.lendingRateType,
+    rate,
+    comparison: Number.isFinite(comparison) ? comparison : null,
+    months: durationToMonths(r.additionalValue),
+    purpose: r.loanPurpose || 'ANY',
+    repayment: r.repaymentType || 'ANY',
+    tiers: tiers.length ? tiers : null,
+    info: r.additionalInfo ? String(r.additionalInfo).slice(0, 300) : null,
+  };
+}
+
+export function normaliseLendingRates(lendingRates) {
+  let rows = (lendingRates || []).map(normaliseLendingRow).filter(Boolean);
+  // 0% / near-zero rows are hardship or placeholder entries, not market rates.
+  rows = rows.filter(r => r.rate >= 0.005);
+  // Same percent-style quirk as deposits; no AU home-loan rate exceeds 25%
+  // as a decimal, so anything above 0.25 means the bank publishes percentages.
+  if (rows.some(r => r.rate > 0.25)) {
+    for (const r of rows) {
+      r.rate /= 100;
+      if (r.comparison != null) r.comparison /= 100;
+    }
+  }
+  return rows;
+}
+
+// LVR bands are published as fractions (0.60) by some banks, percent (60) by
+// others; normalise a bound to percent.
+const asLvrPct = v => (v <= 1.5 ? v * 100 : v);
+
+function lendingRowMatches(row, { months, purpose, repayment, lvr }) {
+  if (months == null) {
+    if (!(row.type === 'VARIABLE' || row.type === 'FLOATING' || row.type === 'MARKET_LINKED')) return false;
+  } else {
+    if (row.type !== 'FIXED' || row.months == null || Math.round(row.months) !== months) return false;
+  }
+  if (row.purpose !== 'ANY' && purpose && row.purpose !== purpose) return false;
+  if (row.repayment !== 'ANY' && repayment && row.repayment !== repayment) return false;
+  if (lvr != null && row.tiers) {
+    const pctTiers = row.tiers.filter(t => t.unit === 'PERCENT');
+    if (pctTiers.length) {
+      const ok = pctTiers.some(
+        t => lvr >= asLvrPct(t.min) && lvr <= (t.max == null ? 100 : asLvrPct(t.max))
+      );
+      if (!ok) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Lowest advertised rate for a term (months; null = variable) under the given
+ * purpose / repayment / LVR. Returns { rate, comparison } or null.
+ */
+export function bestLendingRateAt(rows, filters) {
+  let best = null;
+  for (const row of rows) {
+    if (!lendingRowMatches(row, filters)) continue;
+    if (best == null || row.rate < best.rate) best = { rate: row.rate, comparison: row.comparison };
+  }
+  return best;
+}

@@ -1,8 +1,10 @@
 # Rate Radar AU 📡
 
-Savings-account and term-deposit interest rates for **every retail Australian ADI**, compiled
-from the official Open Banking (Consumer Data Right) **Product Reference Data** APIs — the
-public, no-auth endpoints every bank is legally required to publish.
+Savings-account, term-deposit and home-loan interest rates for **every retail Australian
+ADI**, compiled from the official Open Banking (Consumer Data Right) **Product Reference
+Data** APIs — the public, no-auth endpoints every bank is legally required to publish.
+A header dropdown switches between the deposits section (savings + TDs) and the home-loans
+section, each with purpose-built filters.
 
 No scraping, no API keys: one call to the ACCC's CDR register enumerates ~115 brands, then
 each brand's standardised `/cds-au/v1/banking/products` endpoint supplies the rates.
@@ -46,6 +48,14 @@ Banks publish rate data inconsistently; the normaliser applies these rules:
 - Overlapping tier rows for the same band (payment-frequency variants, duplicates) take
   the **max** rate, never a sum.
 - Business/wholesale brands and products are filtered out — this is a retail comparison.
+
+Home loans (`lendingRates`):
+
+- Rates are the **lowest advertised** for the selected loan purpose, repayment type and
+  LVR band; the bank's published **comparison rate** is shown alongside.
+- LVR bands are normalised whether banks publish them as fractions (0.60) or percent (60).
+- Near-zero rows (hardship / fee-assistance placeholders) and penalty/fee rate types are
+  excluded.
 
 Every product drawer shows the bank's raw published rate rows, so the fine print is always
 one click away. Not financial advice; confirm with the bank before opening an account.

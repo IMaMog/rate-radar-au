@@ -4,12 +4,14 @@
 import { cdsGetAllProducts, cdsGetProductDetail, pool } from './cds.js';
 import {
   normaliseDepositRates,
+  normaliseLendingRates,
+  bestLendingRateAt,
   ratePartsAt,
   termDepositRates,
   REF_BALANCE,
 } from '../shared/rates.js';
 
-const CATEGORIES = ['TRANS_AND_SAVINGS_ACCOUNTS', 'TERM_DEPOSITS'];
+const CATEGORIES = ['TRANS_AND_SAVINGS_ACCOUNTS', 'TERM_DEPOSITS', 'RESIDENTIAL_MORTGAGES'];
 
 // This is a retail comparison — skip business/wholesale brands and products.
 export const NON_RETAIL_BRAND_RX = /\bbusiness\b|\bwholesale\b|\bcorporate\b|intermediar/i;
@@ -36,11 +38,10 @@ export async function fetchBrandProducts(brand, { detailConcurrency = 5 } = {}) 
 
   const savings = [];
   const termDeposits = [];
+  const mortgages = [];
   stubs.forEach((stub, i) => {
     const d = details[i];
     if (!d || d.__error) return;
-    const structures = normaliseDepositRates(d.depositRates);
-    if (!structures.length) return;
 
     const common = {
       brandId: brand.brandId,
@@ -51,6 +52,23 @@ export async function fetchBrandProducts(brand, { detailConcurrency = 5 } = {}) 
       url: d.applicationUri || d.additionalInformation?.overviewUri || null,
       updated: d.lastUpdated || null,
     };
+
+    if (d.productCategory === 'RESIDENTIAL_MORTGAGES') {
+      const lending = normaliseLendingRates(d.lendingRates);
+      if (!lending.length) return;
+      // Headline for default sort: variable rate, owner-occupied P&I at 80% LVR.
+      const v = bestLendingRateAt(lending, {
+        months: null,
+        purpose: 'OWNER_OCCUPIED',
+        repayment: 'PRINCIPAL_AND_INTEREST',
+        lvr: 80,
+      });
+      mortgages.push({ ...common, lending, headlineVar: v ? v.rate : null });
+      return;
+    }
+
+    const structures = normaliseDepositRates(d.depositRates);
+    if (!structures.length) return;
 
     // Some banks miscategorise term deposits under savings — route by content.
     const tdRates = termDepositRates(structures);
@@ -66,5 +84,5 @@ export async function fetchBrandProducts(brand, { detailConcurrency = 5 } = {}) 
     }
   });
 
-  return { savings, termDeposits, productCount: stubs.length };
+  return { savings, termDeposits, mortgages, productCount: stubs.length };
 }

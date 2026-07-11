@@ -1,6 +1,7 @@
 import {
   ratePartsAt,
   bestTdRateAt,
+  bestLendingRateAt,
   fmtPct,
   REF_BALANCE,
 } from './shared/rates.js';
@@ -9,6 +10,7 @@ const $ = id => document.getElementById(id);
 
 const state = {
   data: null,
+  section: 'deposits',
   tab: 'savings',
   balance: REF_BALANCE,
   search: '',
@@ -16,6 +18,13 @@ const state = {
   savingsSort: { key: 'max', dir: -1 },
   tdSort: { key: 12, dir: -1 },
   tdTerms: [],
+  // Home loans
+  mPurpose: 'OWNER_OCCUPIED',
+  mRepay: 'PRINCIPAL_AND_INTEREST',
+  mLvr: 80,
+  mSearch: '',
+  mSort: { key: 'var', dir: 1 }, // ascending: lower is better
+  mTerms: [],
   liveBrands: new Set(), // brands refreshed live this session
   drawerKey: null,
 };
@@ -63,6 +72,22 @@ function initDerived() {
   if (!state.tdTerms.includes(state.tdSort.key)) {
     state.tdSort.key = state.tdTerms.includes(12) ? 12 : state.tdTerms[0];
   }
+
+  // Fixed-term columns for home loans: most common fixed terms, ascending.
+  const fixedCounts = new Map();
+  for (const p of state.data.mortgages || []) {
+    const seen = new Set();
+    for (const r of p.lending) {
+      if (r.type !== 'FIXED' || r.months == null) continue;
+      const m = Math.round(r.months);
+      if (!seen.has(m)) { seen.add(m); fixedCounts.set(m, (fixedCounts.get(m) || 0) + 1); }
+    }
+  }
+  state.mTerms = [...fixedCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(e => e[0])
+    .sort((a, b) => a - b);
 
   const d = new Date(state.data.generatedAt);
   const hrs = Math.max(0, Math.round((Date.now() - d) / 36e5));
@@ -218,6 +243,97 @@ function renderTd(rows) {
   $('count-td').textContent = `(${rows.length})`;
 }
 
+// ---------- Home loans ----------
+function loanFilters(months) {
+  return { months, purpose: state.mPurpose, repayment: state.mRepay, lvr: state.mLvr };
+}
+
+function loansRows() {
+  const rows = [];
+  for (const p of state.data.mortgages || []) {
+    if (state.mSearch && !(p.bank + ' ' + p.name).toLowerCase().includes(state.mSearch)) continue;
+    const variable = bestLendingRateAt(p.lending, loanFilters(null));
+    const byTerm = {};
+    let any = variable != null;
+    for (const m of state.mTerms) {
+      const r = bestLendingRateAt(p.lending, loanFilters(m));
+      byTerm[m] = r;
+      if (r != null) any = true;
+    }
+    if (any) rows.push({ p, variable, byTerm });
+  }
+  const { key, dir } = state.mSort;
+  const val = r => (key === 'var' ? r.variable : r.byTerm[key])?.rate;
+  rows.sort((a, b) => {
+    if (key === 'bank') return dir * a.p.bank.localeCompare(b.p.bank);
+    const av = val(a) ?? (dir === 1 ? Infinity : -Infinity);
+    const bv = val(b) ?? (dir === 1 ? Infinity : -Infinity);
+    return dir * (av - bv) || a.p.bank.localeCompare(b.p.bank);
+  });
+  return rows;
+}
+
+const fmtLoanTerm = m => (m % 12 === 0 ? `${m / 12} yr fixed` : `${m} mo fixed`);
+
+function loanCell(entry, isBest) {
+  if (!entry) return '<td class="rate-cell">—</td>';
+  const comp = entry.comparison != null ? `<span class="comp">${fmtPct(entry.comparison)} comp</span>` : '';
+  return `<td class="rate-cell ${isBest ? 'rate-max' : ''}">${fmtPct(entry.rate)}${comp}</td>`;
+}
+
+function renderLoans(rows) {
+  const sortCls = k =>
+    state.mSort.key === k ? (state.mSort.dir === 1 ? 'sorted-asc' : 'sorted-desc') : '';
+  $('loans-head').innerHTML = `<tr>
+    <th class="col-rank">#</th>
+    <th class="col-bank sortable ${sortCls('bank')}" data-sort="bank">Lender</th>
+    <th class="col-product">Loan</th>
+    <th class="col-rate sortable ${sortCls('var')}" data-sort="var">Variable</th>
+    ${state.mTerms.map(m => `<th class="col-rate sortable ${sortCls(m)}" data-sort="${m}">${fmtLoanTerm(m)}</th>`).join('')}
+  </tr>`;
+
+  // Lowest per column (lower is better for loans).
+  const bestVar = rows.reduce((mn, r) => Math.min(mn, r.variable?.rate ?? Infinity), Infinity);
+  const bestTerm = {};
+  for (const m of state.mTerms) {
+    bestTerm[m] = rows.reduce((mn, r) => Math.min(mn, r.byTerm[m]?.rate ?? Infinity), Infinity);
+  }
+
+  $('loans-body').innerHTML = rows
+    .map(
+      (r, i) => `<tr data-key="${esc(keyOf(r.p))}">
+      <td class="col-rank">${i + 1}</td>
+      <td>${bankCell(r.p)}</td>
+      <td class="product-cell"><span class="product-name">${esc(r.p.name)}</span></td>
+      ${loanCell(r.variable, r.variable && r.variable.rate === bestVar)}
+      ${state.mTerms.map(m => loanCell(r.byTerm[m], r.byTerm[m] && r.byTerm[m].rate === bestTerm[m])).join('')}
+    </tr>`
+    )
+    .join('');
+  $('loans-empty').hidden = rows.length > 0;
+}
+
+function renderLoanStats(rows) {
+  const pick = get => {
+    let best = null;
+    for (const r of rows) {
+      const v = get(r);
+      if (v != null && (best == null || v.rate < best.v.rate)) best = { v: { rate: v.rate }, r };
+    }
+    return best;
+  };
+  const setTile = (id, best) => {
+    $(id).textContent = best ? fmtPct(best.v.rate) : '—';
+    $(id + '-sub').textContent = best ? `${best.r.p.bank} · ${best.r.p.name}` : '';
+  };
+  setTile('stat-low-var', pick(r => r.variable));
+  setTile('stat-low-3y', pick(r => r.byTerm[36]));
+  setTile('stat-low-5y', pick(r => r.byTerm[60]));
+  const lenders = new Set((state.data.mortgages || []).map(m => m.brandId));
+  $('stat-lenders').textContent = lenders.size;
+  $('stat-lenders-sub').textContent = `${(state.data.mortgages || []).length} home loan products`;
+}
+
 // ---------- Stats & histogram ----------
 function renderStats(savRows) {
   const topRow = savRows.length
@@ -293,7 +409,8 @@ function renderHistogram(rows) {
 function findProduct(key) {
   return (
     state.data.savings.find(p => keyOf(p) === key) ||
-    state.data.termDeposits.find(p => keyOf(p) === key)
+    state.data.termDeposits.find(p => keyOf(p) === key) ||
+    (state.data.mortgages || []).find(p => keyOf(p) === key)
   );
 }
 
@@ -333,7 +450,57 @@ function renderDrawer(p) {
   if (p.url) { link.href = p.url; link.style.display = ''; } else { link.style.display = 'none'; }
 
   let body = '';
-  if (p.structures) {
+  if (p.lending) {
+    const lvrLabel = state.mLvr ? `≤${state.mLvr}% LVR` : 'any LVR';
+    const purposeLabel = state.mPurpose === 'INVESTMENT' ? 'investor' : 'owner-occupier';
+    const repayLabel = state.mRepay === 'INTEREST_ONLY' ? 'interest only' : 'P&I';
+    const variable = bestLendingRateAt(p.lending, loanFilters(null));
+    let bestFixed = null;
+    for (const m of state.mTerms) {
+      const r = bestLendingRateAt(p.lending, loanFilters(m));
+      if (r && (!bestFixed || r.rate < bestFixed.rate)) bestFixed = { ...r, months: m };
+    }
+    body += `<div class="rate-summary">
+      <div class="cell"><div class="k">Variable rate</div><div class="v">${variable ? fmtPct(variable.rate) : '—'}</div>
+        <div class="s">${variable?.comparison != null ? fmtPct(variable.comparison) + ' comparison' : ''}</div></div>
+      <div class="cell"><div class="k">Best fixed</div><div class="v">${bestFixed ? fmtPct(bestFixed.rate) : '—'}</div>
+        <div class="s">${bestFixed ? fmtLoanTerm(bestFixed.months) + (bestFixed.comparison != null ? ` · ${fmtPct(bestFixed.comparison)} comp` : '') : ''}</div></div>
+    </div>
+    <div class="cond-block">Showing rates for ${purposeLabel}, ${repayLabel}, ${lvrLabel}. Change the filters above the table to see other combinations.</div>`;
+
+    const typeOrder = t => (t === 'VARIABLE' || t === 'FLOATING' || t === 'MARKET_LINKED' ? 0 : t === 'FIXED' ? 1 : t === 'INTRODUCTORY' ? 2 : 3);
+    const rows = [...p.lending].sort(
+      (a, b) => typeOrder(a.type) - typeOrder(b.type) || (a.months ?? 0) - (b.months ?? 0) || a.rate - b.rate
+    );
+    body += `<div class="drawer-section-title">All published rates</div>
+      <table class="detail-table"><thead><tr><th>Type</th><th style="text-align:right">Rate</th><th style="text-align:right">Comp.</th><th>Applies to</th></tr></thead><tbody>`;
+    for (const r of rows) {
+      const typeLabel =
+        r.type === 'FIXED' && r.months != null
+          ? fmtLoanTerm(Math.round(r.months))
+          : r.type[0] + r.type.slice(1).toLowerCase().replace(/_/g, ' ');
+      const bits = [];
+      if (r.purpose !== 'ANY') bits.push(r.purpose === 'INVESTMENT' ? 'Investor' : 'Owner-occ.');
+      if (r.repayment !== 'ANY') bits.push(r.repayment === 'INTEREST_ONLY' ? 'Interest only' : 'P&I');
+      for (const t of r.tiers || []) {
+        if (t.unit === 'PERCENT') {
+          const lo = t.min <= 1.5 ? t.min * 100 : t.min;
+          const hi = t.max == null ? null : t.max <= 1.5 ? t.max * 100 : t.max;
+          bits.push(hi == null ? `LVR ${Math.round(lo)}%+` : `LVR ${Math.round(lo)}–${Math.round(hi)}%`);
+        } else {
+          bits.push(bandLabel(t.min, t.max));
+        }
+      }
+      if (r.info) bits.push(r.info.slice(0, 120));
+      body += `<tr>
+        <td>${esc(typeLabel)}</td>
+        <td class="num">${fmtPct(r.rate)}</td>
+        <td class="num">${r.comparison != null ? fmtPct(r.comparison) : '—'}</td>
+        <td class="note">${esc(bits.join(' · '))}</td>
+      </tr>`;
+    }
+    body += '</tbody></table>';
+  } else if (p.structures) {
     const parts = ratePartsAt(p.structures, state.balance);
     body += `<div class="rate-summary">
       <div class="cell"><div class="k">Max rate at ${fmtMoney(state.balance)}</div><div class="v">${fmtPct(parts.max)}</div></div>
@@ -411,6 +578,9 @@ async function liveRefresh() {
     state.data.termDeposits = state.data.termDeposits
       .filter(x => x.brandId !== p.brandId)
       .concat(fresh.termDeposits || []);
+    state.data.mortgages = (state.data.mortgages || [])
+      .filter(x => x.brandId !== p.brandId)
+      .concat(fresh.mortgages || []);
     state.liveBrands.add(p.brandId);
     renderAll();
     const again = findProduct(state.drawerKey);
@@ -440,6 +610,21 @@ function renderAll() {
   renderSavings(savRows);
   renderTd(tdRows());
   renderStats(savRows);
+  const lRows = loansRows();
+  renderLoans(lRows);
+  renderLoanStats(lRows);
+}
+
+function setSection(name) {
+  state.section = name;
+  $('section-select').value = name;
+  $('section-deposits').hidden = name !== 'deposits';
+  $('section-loans').hidden = name !== 'loans';
+  history.replaceState(
+    null,
+    '',
+    name === 'loans' ? '#home-loans' : state.tab === 'td' ? '#td' : location.pathname + location.search
+  );
 }
 
 // ---------- Events ----------
@@ -491,12 +676,45 @@ function setTab(name) {
   $('panel-savings').hidden = name !== 'savings';
   $('panel-td').hidden = name !== 'td';
   $('nostrings-field').style.display = name === 'savings' ? '' : 'none';
-  history.replaceState(null, '', name === 'td' ? '#td' : location.pathname + location.search);
+  if (state.section === 'deposits') {
+    history.replaceState(null, '', name === 'td' ? '#td' : location.pathname + location.search);
+  }
 }
 
 for (const tab of document.querySelectorAll('.tab')) {
   tab.addEventListener('click', () => setTab(tab.dataset.tab));
 }
+
+$('section-select').addEventListener('change', e => setSection(e.target.value));
+
+function segListener(id, apply) {
+  $(id).addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    for (const b of $(id).querySelectorAll('button')) b.classList.toggle('active', b === btn);
+    apply(btn.dataset.value ?? btn.dataset.lvr);
+    renderAll();
+  });
+}
+segListener('purpose-seg', v => { state.mPurpose = v; });
+segListener('repay-seg', v => { state.mRepay = v; });
+segListener('lvr-chips', v => { state.mLvr = v === '' ? null : parseInt(v, 10); });
+
+$('loans-search').addEventListener('input', e => {
+  state.mSearch = e.target.value.trim().toLowerCase();
+  renderAll();
+});
+
+$('loans-head').addEventListener('click', e => {
+  const th = e.target.closest('th.sortable');
+  if (!th) return;
+  const raw = th.dataset.sort;
+  const key = raw === 'bank' || raw === 'var' ? raw : parseInt(raw, 10);
+  const s = state.mSort;
+  if (s.key === key) s.dir = -s.dir;
+  else { s.key = key; s.dir = 1; }
+  renderAll();
+});
 
 document.querySelector('#savings-table thead').addEventListener('click', e => {
   const th = e.target.closest('th.sortable');
@@ -519,7 +737,7 @@ $('td-head').addEventListener('click', e => {
   renderAll();
 });
 
-for (const bodyId of ['savings-body', 'td-body']) {
+for (const bodyId of ['savings-body', 'td-body', 'loans-body']) {
   $(bodyId).addEventListener('click', e => {
     const tr = e.target.closest('tr[data-key]');
     if (tr) openDrawer(tr.dataset.key);
@@ -551,5 +769,6 @@ if (urlTheme === 'dark' || urlTheme === 'light') {
   document.documentElement.dataset.theme = urlTheme;
 }
 if (location.hash === '#td') setTab('td');
+if (location.hash === '#home-loans') setSection('loans');
 
 load();

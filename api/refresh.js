@@ -32,6 +32,7 @@ export default async function handler(req, res) {
       fetchedAt: new Date().toISOString(),
       savings: result.savings,
       termDeposits: result.termDeposits,
+      mortgages: result.mortgages,
     });
   } catch (e) {
     res.status(502).json({ error: e?.message || 'Upstream fetch failed' });
