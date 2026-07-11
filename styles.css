@@ -441,8 +441,65 @@ td.rate-max { font-weight: 650; }
 .btn[disabled] { opacity: 0.55; pointer-events: none; }
 .btn .spin { animation: spin 0.8s linear infinite; }
 
-.report-link { color: var(--muted); font-size: 12.5px; }
+.report-link { color: var(--muted); font-size: 12.5px; cursor: pointer; background: none; border: none; padding: 0; text-decoration: underline; }
 .report-link:hover { color: var(--ink-2); }
+
+/* Floating "spot a dodgy rate" pill */
+.report-fab {
+  position: fixed; right: 22px; bottom: 22px;
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-weight: 550; font-size: 13.5px;
+  box-shadow: 0 6px 24px rgba(11, 11, 11, 0.18);
+  z-index: 30;
+  transition: transform 0.15s;
+}
+.report-fab:hover { transform: translateY(-2px); border-color: var(--accent); }
+.report-fab[hidden] { display: none; }
+
+#report-backdrop:not([hidden]) { opacity: 1; z-index: 50; }
+
+/* Report modal */
+.report-modal {
+  position: fixed; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(440px, calc(100vw - 32px));
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 22px 24px;
+  z-index: 55;
+}
+.report-modal[hidden] { display: none; }
+.report-modal h2 { margin: 0 0 6px; font-size: 19px; letter-spacing: -0.01em; }
+.report-sub { margin: 0 0 12px; color: var(--ink-2); font-size: 13.5px; }
+.report-context {
+  margin: 0 0 10px;
+  font-size: 12.5px; color: var(--ink-2);
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 7px 10px;
+}
+.report-context:empty { display: none; }
+.report-modal textarea {
+  width: 100%; resize: vertical;
+  font: inherit; color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--baseline);
+  border-radius: 9px;
+  padding: 10px 12px;
+}
+.report-modal textarea:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+.hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.report-error { color: var(--bad); font-size: 13px; margin: 8px 0 0; }
+.report-actions {
+  display: flex; justify-content: flex-end; gap: 10px;
+  margin-top: 14px;
+}
 
 /* ---------- Toast ---------- */
 .toast {

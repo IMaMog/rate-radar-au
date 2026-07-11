@@ -238,7 +238,7 @@
         </p>
         <p id="failed-note" class="failed-note"></p>
         <p>
-          <button id="report-issue" class="link-btn">⚑ Report a data issue</button>
+          <button id="report-issue" class="link-btn">Spot a dodgy rate? Dob it in →</button>
         </p>
       </footer>
     </div>
@@ -265,6 +265,33 @@
       <a id="drawer-link" class="btn primary" target="_blank" rel="noopener">View at bank ↗</a>
     </div>
   </aside>
+
+  <!-- Report a dodgy rate -->
+  <button id="report-fab" class="report-fab" hidden>
+    <span aria-hidden="true">🕵️</span> Spot a dodgy rate?
+  </button>
+  <div id="report-backdrop" class="drawer-backdrop" hidden></div>
+  <div id="report-modal" class="report-modal" role="dialog" aria-modal="true" aria-labelledby="report-title" hidden>
+    <div id="report-form-view">
+      <h2 id="report-title">Dob in a dodgy rate 🕵️</h2>
+      <p class="report-sub">See a number that's off the money? Tell us and our robo-auditor
+        will chase the bank's data down. Takes ten seconds, no sign-up.</p>
+      <p id="report-context" class="report-context"></p>
+      <textarea id="report-message" rows="4" maxlength="2000"
+        placeholder="e.g. This account's bonus rate is 5.40% on the bank's own site, not 5.00%"></textarea>
+      <input id="report-website" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp-field" />
+      <p id="report-error" class="report-error" hidden></p>
+      <div class="report-actions">
+        <button id="report-cancel" class="btn secondary">Never mind</button>
+        <button id="report-send" class="btn primary">Send it in</button>
+      </div>
+    </div>
+    <div id="report-done-view" hidden>
+      <h2>On it! 🎯</h2>
+      <p class="report-sub">Your tip-off is in the queue — the radar never sleeps. Thanks for
+        keeping the banks honest.</p>
+    </div>
+  </div>
 
   <div id="toast" class="toast" hidden></div>
 

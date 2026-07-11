@@ -49,6 +49,7 @@ async function load() {
     state.data = await res.json();
     $('loading').hidden = true;
     $('app').hidden = false;
+    $('report-fab').hidden = false;
     initDerived();
     renderAll();
   } catch (e) {
@@ -553,8 +554,8 @@ function renderDrawer(p) {
     body += `<p class="note" style="color:var(--muted);font-size:12px;margin-top:14px">
       Last updated by the bank: ${new Date(p.updated).toLocaleString('en-AU')}</p>`;
   }
-  body += `<p style="margin-top:10px"><a class="report-link" target="_blank" rel="noopener"
-    href="${esc(reportIssueUrl(p))}">⚑ Something wrong with this product's data? Report it</a></p>`;
+  body += `<p style="margin-top:10px"><button class="report-link" data-report-product>
+    🕵️ Something off with this product's numbers? Dob it in</button></p>`;
   $('drawer-body').innerHTML = body;
 }
 
@@ -594,9 +595,7 @@ async function liveRefresh() {
   }
 }
 
-// ---------- Report a data issue (files a GitHub issue Claude can action) ----------
-const REPO_ISSUES = 'https://github.com/IMaMog/rate-radar-au/issues/new';
-
+// ---------- Report a dodgy rate (on-site modal -> /api/report) ----------
 function currentFilterSummary() {
   if (state.section === 'loans') {
     return `${state.mRateType === 'FIXED' ? fmtLoanTerm(state.mFixedMonths) : 'Variable'} / ${
@@ -608,22 +607,68 @@ function currentFilterSummary() {
   return `${state.tab === 'td' ? 'Term deposits' : 'Savings'} at ${fmtMoney(state.balance)}`;
 }
 
-function reportIssueUrl(p) {
-  const title = p ? `Data issue: ${p.bank} — ${p.name}` : 'Data issue';
-  const lines = [
-    p ? `**Product**: ${p.bank} — ${p.name}` : '**Product**: (general)',
-    p ? `**IDs**: brandId \`${p.brandId}\`, productId \`${p.productId}\`` : null,
-    `**Section**: ${state.section === 'loans' ? 'Home loans' : 'Deposits'} (${currentFilterSummary()})`,
-    `**Snapshot**: ${state.data?.generatedAt || 'unknown'}`,
-    '',
-    '**What looks wrong?**',
-    '(describe the issue here — what the site shows vs what the bank actually offers)',
-  ].filter(l => l != null);
-  const u = new URL(REPO_ISSUES);
-  u.searchParams.set('labels', 'data-issue');
-  u.searchParams.set('title', title);
-  u.searchParams.set('body', lines.join('\n'));
-  return u.toString();
+let reportProduct = null; // product context when opened from a drawer
+
+function openReportModal(p) {
+  reportProduct = p || null;
+  $('report-context').textContent = p
+    ? `About: ${p.bank} — ${p.name}`
+    : `About: ${state.section === 'loans' ? 'Home loans' : 'Deposits'} (${currentFilterSummary()})`;
+  $('report-message').value = '';
+  $('report-error').hidden = true;
+  $('report-form-view').hidden = false;
+  $('report-done-view').hidden = true;
+  $('report-modal').hidden = false;
+  $('report-backdrop').hidden = false;
+  $('report-backdrop').classList.add('open');
+  requestAnimationFrame(() => $('report-message').focus());
+}
+
+function closeReportModal() {
+  $('report-modal').hidden = true;
+  $('report-backdrop').classList.remove('open');
+  $('report-backdrop').hidden = true;
+}
+
+async function sendReport() {
+  const message = $('report-message').value.trim();
+  const errEl = $('report-error');
+  if (message.length < 3) {
+    errEl.textContent = 'Give us a few words to go on — what looks off?';
+    errEl.hidden = false;
+    return;
+  }
+  const btn = $('report-send');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  try {
+    const res = await fetch('/api/report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message,
+        website: $('report-website').value, // honeypot
+        context: {
+          product: reportProduct?.name || null,
+          bank: reportProduct?.bank || null,
+          brandId: reportProduct?.brandId || null,
+          productId: reportProduct?.productId || null,
+          view: `${state.section === 'loans' ? 'Home loans' : 'Deposits'} (${currentFilterSummary()})`,
+          snapshot: state.data?.generatedAt || null,
+        },
+      }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    $('report-form-view').hidden = true;
+    $('report-done-view').hidden = false;
+    setTimeout(closeReportModal, 2400);
+  } catch {
+    errEl.textContent = "Hmm, the carrier pigeon bounced. Give it another go in a tick?";
+    errEl.hidden = false;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send it in';
+  }
 }
 
 let toastTimer;
@@ -701,8 +746,16 @@ $('offset-toggle').addEventListener('change', e => {
   renderAll();
 });
 
-$('report-issue').addEventListener('click', () => {
-  window.open(reportIssueUrl(null), '_blank', 'noopener');
+$('report-issue').addEventListener('click', () => openReportModal(null));
+$('report-fab').addEventListener('click', () => openReportModal(null));
+$('report-cancel').addEventListener('click', closeReportModal);
+$('report-backdrop').addEventListener('click', closeReportModal);
+$('report-send').addEventListener('click', sendReport);
+$('drawer-body').addEventListener('click', e => {
+  if (e.target.closest('[data-report-product]')) {
+    const p = state.drawerKey && findProduct(state.drawerKey);
+    openReportModal(p || null);
+  }
 });
 
 function setTab(name) {
@@ -797,7 +850,9 @@ $('drawer-close').addEventListener('click', closeDrawer);
 $('drawer-backdrop').addEventListener('click', closeDrawer);
 $('drawer-refresh').addEventListener('click', liveRefresh);
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && state.drawerKey) closeDrawer();
+  if (e.key !== 'Escape') return;
+  if (!$('report-modal').hidden) closeReportModal();
+  else if (state.drawerKey) closeDrawer();
 });
 
 $('theme-toggle').addEventListener('click', () => {
@@ -821,3 +876,4 @@ if (location.hash === '#td') setTab('td');
 if (location.hash === '#home-loans') setSection('loans');
 
 load();
+

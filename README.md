@@ -67,9 +67,17 @@ Home loans (`lendingRates`):
 
 ## Data issues
 
-The site's "⚑ Report a data issue" links open a prefilled GitHub issue labelled
-`data-issue` (product, IDs, active filters, snapshot timestamp). To action the queue,
-point Claude Code at this repo and ask it to work through open `data-issue` issues.
+The site's "Spot a dodgy rate?" pill (and the per-product link in each drawer) opens an
+on-site modal — one text box, no sign-up. Reports POST to `api/report.js`, which files a
+GitHub issue labelled `data-issue` with the product, IDs, active filters and snapshot
+timestamp attached automatically. Reporters never see GitHub.
+
+**Setup (one-off)**: add a `GITHUB_TOKEN` env var in Vercel (a fine-grained PAT with
+*Issues: read & write* on this repo). Until it's set, `/api/report` returns 503 and the
+modal shows a friendly "try again later".
+
+To action the queue, point Claude Code at this repo and ask it to work through open
+`data-issue` issues — each report carries the IDs needed to look up the bank's raw data.
 
 Every product drawer shows the bank's raw published rate rows, so the fine print is always
 one click away. Not financial advice; confirm with the bank before opening an account.
