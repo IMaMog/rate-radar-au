@@ -21,11 +21,13 @@ function normaliseRow(r) {
   if (!Number.isFinite(rate)) return null;
   const tiers = (r.tiers || [])
     .filter(t => (t.unitOfMeasure || 'DOLLAR') === 'DOLLAR')
-    .map(t => ({
-      min: t.minimumValue != null ? parseFloat(t.minimumValue) : 0,
-      max: t.maximumValue != null ? parseFloat(t.maximumValue) : null,
-      method: t.rateApplicationMethod || 'WHOLE_BALANCE',
-    }));
+    .map(t => {
+      const min = t.minimumValue != null ? parseFloat(t.minimumValue) : 0;
+      let max = t.maximumValue != null ? parseFloat(t.maximumValue) : null;
+      // Some banks publish maximumValue 0 (or ≤ min) to mean "no ceiling".
+      if (max != null && max <= min) max = null;
+      return { min, max, method: t.rateApplicationMethod || 'WHOLE_BALANCE' };
+    });
   return {
     type: r.depositRateType,
     rate,
@@ -38,7 +40,14 @@ function normaliseRow(r) {
 }
 
 export function normaliseDepositRates(depositRates) {
-  return (depositRates || []).map(normaliseRow).filter(Boolean);
+  const rows = (depositRates || []).map(normaliseRow).filter(Boolean);
+  // The spec says rates are decimals (0.0225 = 2.25%), but some banks publish
+  // percentages (2.25). No AU deposit pays over 12%, so if any of a product's
+  // rates exceeds 0.12 the whole product is percent-style — scale it down.
+  if (rows.some(r => r.rate > 0.12)) {
+    for (const r of rows) r.rate /= 100;
+  }
+  return rows;
 }
 
 // ---------- Effective-rate maths ----------
