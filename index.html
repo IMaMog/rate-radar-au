@@ -200,6 +200,10 @@
               </div>
             </div>
             <input id="loans-search" class="search-input" type="search" placeholder="Search lender or loan…" />
+            <label class="toggle-field" title="Only show loans that come with an offset account">
+              <input type="checkbox" id="offset-toggle" />
+              <span>Offset account</span>
+            </label>
           </div>
         </section>
 
@@ -222,6 +226,9 @@
           conditions; always confirm on the bank's site before opening an account. Not financial advice.
         </p>
         <p id="failed-note" class="failed-note"></p>
+        <p>
+          <button id="report-issue" class="link-btn">⚑ Report a data issue</button>
+        </p>
       </footer>
     </div>
   </main>

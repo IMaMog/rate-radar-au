@@ -56,6 +56,18 @@ Home loans (`lendingRates`):
 - LVR bands are normalised whether banks publish them as fractions (0.60) or percent (60).
 - Near-zero rows (hardship / fee-assistance placeholders) and penalty/fee rate types are
   excluded.
+- Green/sustainability-named products are excluded entirely — most are small add-on loans
+  (solar panels etc.), not standard mortgages. This also drops the few genuine
+  discounted-for-efficiency mortgages (Bank Australia, Gateway); refine `GREEN_ADDON_RX`
+  in `fetcher/brand.js` if they should return.
+- The **Offset account** filter uses the product's published `features` (OFFSET), shown
+  as a badge in the table.
+
+## Data issues
+
+The site's "⚑ Report a data issue" links open a prefilled GitHub issue labelled
+`data-issue` (product, IDs, active filters, snapshot timestamp). To action the queue,
+point Claude Code at this repo and ask it to work through open `data-issue` issues.
 
 Every product drawer shows the bank's raw published rate rows, so the fine print is always
 one click away. Not financial advice; confirm with the bank before opening an account.

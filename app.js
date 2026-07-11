@@ -23,6 +23,7 @@ const state = {
   mRepay: 'PRINCIPAL_AND_INTEREST',
   mLvr: 80,
   mSearch: '',
+  mOffset: false,
   mSort: { key: 'var', dir: 1 }, // ascending: lower is better
   mTerms: [],
   liveBrands: new Set(), // brands refreshed live this session
@@ -252,6 +253,7 @@ function loansRows() {
   const rows = [];
   for (const p of state.data.mortgages || []) {
     if (state.mSearch && !(p.bank + ' ' + p.name).toLowerCase().includes(state.mSearch)) continue;
+    if (state.mOffset && !p.offset) continue;
     const variable = bestLendingRateAt(p.lending, loanFilters(null));
     const byTerm = {};
     let any = variable != null;
@@ -304,7 +306,7 @@ function renderLoans(rows) {
       (r, i) => `<tr data-key="${esc(keyOf(r.p))}">
       <td class="col-rank">${i + 1}</td>
       <td>${bankCell(r.p)}</td>
-      <td class="product-cell"><span class="product-name">${esc(r.p.name)}</span></td>
+      <td class="product-cell"><span class="product-name">${esc(r.p.name)}</span>${r.p.offset ? '<span class="badge badge-intro" title="Comes with an offset account">Offset</span>' : ''}</td>
       ${loanCell(r.variable, r.variable && r.variable.rate === bestVar)}
       ${state.mTerms.map(m => loanCell(r.byTerm[m], r.byTerm[m] && r.byTerm[m].rate === bestTerm[m])).join('')}
     </tr>`
@@ -556,6 +558,8 @@ function renderDrawer(p) {
     body += `<p class="note" style="color:var(--muted);font-size:12px;margin-top:14px">
       Last updated by the bank: ${new Date(p.updated).toLocaleString('en-AU')}</p>`;
   }
+  body += `<p style="margin-top:10px"><a class="report-link" target="_blank" rel="noopener"
+    href="${esc(reportIssueUrl(p))}">⚑ Something wrong with this product's data? Report it</a></p>`;
   $('drawer-body').innerHTML = body;
 }
 
@@ -593,6 +597,36 @@ async function liveRefresh() {
     btn.disabled = false;
     btn.innerHTML = original;
   }
+}
+
+// ---------- Report a data issue (files a GitHub issue Claude can action) ----------
+const REPO_ISSUES = 'https://github.com/IMaMog/rate-radar-au/issues/new';
+
+function currentFilterSummary() {
+  if (state.section === 'loans') {
+    return `${state.mPurpose === 'INVESTMENT' ? 'Investor' : 'Owner-occupier'} / ${
+      state.mRepay === 'INTEREST_ONLY' ? 'Interest only' : 'P&I'
+    } / ${state.mLvr ? `≤${state.mLvr}% LVR` : 'any LVR'}`;
+  }
+  return `${state.tab === 'td' ? 'Term deposits' : 'Savings'} at ${fmtMoney(state.balance)}`;
+}
+
+function reportIssueUrl(p) {
+  const title = p ? `Data issue: ${p.bank} — ${p.name}` : 'Data issue';
+  const lines = [
+    p ? `**Product**: ${p.bank} — ${p.name}` : '**Product**: (general)',
+    p ? `**IDs**: brandId \`${p.brandId}\`, productId \`${p.productId}\`` : null,
+    `**Section**: ${state.section === 'loans' ? 'Home loans' : 'Deposits'} (${currentFilterSummary()})`,
+    `**Snapshot**: ${state.data?.generatedAt || 'unknown'}`,
+    '',
+    '**What looks wrong?**',
+    '(describe the issue here — what the site shows vs what the bank actually offers)',
+  ].filter(l => l != null);
+  const u = new URL(REPO_ISSUES);
+  u.searchParams.set('labels', 'data-issue');
+  u.searchParams.set('title', title);
+  u.searchParams.set('body', lines.join('\n'));
+  return u.toString();
 }
 
 let toastTimer;
@@ -664,6 +698,15 @@ $('search-input').addEventListener('input', e => {
 $('nostrings-toggle').addEventListener('change', e => {
   state.noStrings = e.target.checked;
   renderAll();
+});
+
+$('offset-toggle').addEventListener('change', e => {
+  state.mOffset = e.target.checked;
+  renderAll();
+});
+
+$('report-issue').addEventListener('click', () => {
+  window.open(reportIssueUrl(null), '_blank', 'noopener');
 });
 
 function setTab(name) {
