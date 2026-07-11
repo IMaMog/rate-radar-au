@@ -13,6 +13,7 @@ const state = {
   balance: REF_BALANCE,
   search: '',
   noStrings: false,
+  hideBottom: true,
   savingsSort: { key: 'max', dir: -1 },
   tdSort: { key: 12, dir: -1 },
   tdTerms: [],
@@ -92,11 +93,23 @@ function matchesSearch(p) {
 
 // ---------- Savings ----------
 function savingsRows() {
+  // Percentile cutoff computed over ALL savings products at the current
+  // balance (not the searched subset), so the threshold is stable.
+  let cutoff = -Infinity;
+  if (state.hideBottom) {
+    const all = state.data.savings
+      .map(p => ratePartsAt(p.structures, state.balance).max)
+      .filter(m => m != null && m > 0)
+      .sort((a, b) => a - b);
+    if (all.length) cutoff = all[Math.floor(all.length * 0.1)];
+  }
+
   const rows = [];
   for (const p of state.data.savings) {
     if (!matchesSearch(p)) continue;
     const parts = ratePartsAt(p.structures, state.balance);
     if (parts.max == null || parts.max <= 0) continue;
+    if (parts.max < cutoff) continue;
     const noStrings = parts.bonus == null || parts.bonus <= 0;
     if (state.noStrings && !noStrings) continue;
     rows.push({ p, parts, noStrings });
@@ -460,6 +473,11 @@ $('nostrings-toggle').addEventListener('change', e => {
   renderAll();
 });
 
+$('hide-bottom-toggle').addEventListener('change', e => {
+  state.hideBottom = e.target.checked;
+  renderAll();
+});
+
 function setTab(name) {
   state.tab = name;
   for (const t of document.querySelectorAll('.tab')) {
@@ -470,6 +488,7 @@ function setTab(name) {
   $('panel-savings').hidden = name !== 'savings';
   $('panel-td').hidden = name !== 'td';
   $('nostrings-field').style.display = name === 'savings' ? '' : 'none';
+  $('hide-bottom-field').style.display = name === 'savings' ? '' : 'none';
   history.replaceState(null, '', name === 'td' ? '#td' : location.pathname + location.search);
 }
 
