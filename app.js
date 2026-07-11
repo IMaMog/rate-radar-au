@@ -350,8 +350,18 @@ function renderDrawer(p) {
     }
     body += `<div class="drawer-section-title">All published rates</div>
       <table class="detail-table"><thead><tr><th>Type</th><th style="text-align:right">Rate</th><th>Balance band</th><th>Notes</th></tr></thead><tbody>`;
-    for (const r of p.structures) {
+    const typeOrder = t =>
+      t === 'VARIABLE' || t === 'FLOATING' || t === 'MARKET_LINKED' ? 0
+      : t === 'BONUS' ? 1
+      : t === 'INTRODUCTORY' ? 2
+      : 3;
+    const lowestBand = r => Math.min(...(r.tiers || [{ min: 0 }]).map(t => t.min));
+    const sortedRows = [...p.structures].sort(
+      (a, b) => typeOrder(a.type) - typeOrder(b.type) || lowestBand(a) - lowestBand(b) || b.rate - a.rate
+    );
+    for (const r of sortedRows) {
       const bands = (r.tiers || [{ min: 0, max: null }])
+        .sort((a, b) => a.min - b.min)
         .map(t => bandLabel(t.min, t.max))
         .join('<br>');
       const note = [r.value, r.info].filter(Boolean).join(' — ');
