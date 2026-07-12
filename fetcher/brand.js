@@ -33,6 +33,17 @@ function eligChips(eligibility) {
   return out.length ? [...new Set(out)] : null;
 }
 
+// Some banks state an age limit in prose (description / rate info) instead of
+// the structured eligibility field.
+function proseAgeChip(d) {
+  const texts = [d.description || '', ...(d.depositRates || []).map(r => r.additionalInfo || '')].join(' ');
+  const m =
+    texts.match(/\b(?:must be )?under\s+(\d{1,2})\s+years?/i) ||
+    texts.match(/\baged?\s+(?:up to|under)\s+(\d{1,2})/i) ||
+    texts.match(/\b(\d{1,2})\s+years? of age or under/i);
+  return m ? `Under ${m[1]}s` : null;
+}
+
 // This is a retail comparison — skip business/wholesale brands and products.
 export const NON_RETAIL_BRAND_RX = /\bbusiness\b|\bwholesale\b|\bcorporate\b|intermediar/i;
 const NON_RETAIL_PRODUCT_RX = /\bbusiness\b|\bcorporate\b|\bintermediar/i;
@@ -80,6 +91,10 @@ export async function fetchBrandProducts(brand, { detailConcurrency = 5 } = {}) 
       updated: d.lastUpdated || null,
       elig: eligChips(d.eligibility),
     };
+    if (!common.elig?.some(c => /^Under /.test(c))) {
+      const age = proseAgeChip(d);
+      if (age) common.elig = [...(common.elig || []), age];
+    }
 
     if (d.productCategory === 'RESIDENTIAL_MORTGAGES') {
       if (GREEN_ADDON_RX.test(common.name || '')) return;
