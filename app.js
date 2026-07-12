@@ -30,11 +30,19 @@ const state = {
   mTerms: [],
   liveBrands: new Set(), // brands refreshed live this session
   drawerKey: null,
+  // Investing (brokers)
+  brokers: [],
+  tradeSize: 2000,
+  iSearch: '',
+  iChess: false,
+  iPromo: false,
+  iSort: { key: 'asx', dir: 1 }, // ascending: cheaper is better
   // Pagination
   pageSize: 10,
   sPage: 1,
   tdPage: 1,
   mPage: 1,
+  iPage: 1,
 };
 
 // ---------- Pagination ----------
@@ -76,7 +84,7 @@ document.addEventListener('change', e => {
   const sel = e.target.closest('.page-size');
   if (!sel) return;
   state.pageSize = parseInt(sel.value, 10);
-  state.sPage = state.tdPage = state.mPage = 1;
+  state.sPage = state.tdPage = state.mPage = state.iPage = 1;
   renderAll(false);
 });
 
@@ -95,6 +103,15 @@ async function load() {
     const res = await fetch('data/snapshot.json', { cache: 'no-cache' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     state.data = await res.json();
+    // Broker data is hand-curated and optional — the site works without it.
+    try {
+      const bres = await fetch('data/brokers.json', { cache: 'no-cache' });
+      if (bres.ok) {
+        state.brokers = (await bres.json())
+          .filter(b => b.active !== false)
+          .map(b => ({ ...b, brandId: 'brokers', productId: b.id, bank: b.name, logo: null }));
+      }
+    } catch { /* keep [] */ }
     $('loading').hidden = true;
     $('app').hidden = false;
     $('report-fab').hidden = false;
@@ -391,6 +408,102 @@ function renderLoanStats() {
   $('stat-lenders-sub').textContent = `${(state.data.mortgages || []).length} home loan products`;
 }
 
+// ---------- Investing (brokers) ----------
+// Fee for an ASX trade of `size`: first tier whose ceiling covers it.
+// A tier with both flat and pct means "pct with a $flat minimum".
+function asxFeeAt(b, size) {
+  for (const t of b.asxTiers || []) {
+    if (t.upTo != null && size > t.upTo) continue;
+    const pctFee = t.pct != null ? size * t.pct : null;
+    if (t.flat != null && pctFee != null) return Math.max(t.flat, pctFee);
+    if (pctFee != null) return pctFee;
+    if (t.flat != null) return t.flat;
+    return null;
+  }
+  return null;
+}
+
+const fmtFee = f =>
+  f == null ? '—' : f === 0 ? '$0' : '$' + (Number.isInteger(f) ? f : f.toFixed(2));
+
+function investRows() {
+  const rows = [];
+  for (const b of state.brokers) {
+    if (state.iSearch && !b.name.toLowerCase().includes(state.iSearch)) continue;
+    if (state.iChess && !b.chess) continue;
+    if (state.iPromo && !b.promo) continue;
+    rows.push({ b, fee: asxFeeAt(b, state.tradeSize) });
+  }
+  const { key, dir } = state.iSort;
+  rows.sort((a, c) => {
+    if (key === 'bank') return dir * a.b.name.localeCompare(c.b.name);
+    const val = r => (key === 'fx' ? r.b.fxPct : r.fee);
+    const av = val(a) ?? (dir === 1 ? Infinity : -Infinity);
+    const cv = val(c) ?? (dir === 1 ? Infinity : -Infinity);
+    return dir * (av - cv) || a.b.name.localeCompare(c.b.name);
+  });
+  return rows;
+}
+
+function renderInvest(rows) {
+  const sortCls = k =>
+    state.iSort.key === k ? (state.iSort.dir === 1 ? 'sorted-asc' : 'sorted-desc') : '';
+  $('invest-head').innerHTML = `<tr>
+    <th class="col-rank">#</th>
+    <th class="col-bank sortable ${sortCls('bank')}" data-sort="bank">Broker</th>
+    <th class="col-rate sortable ${sortCls('asx')}" data-sort="asx">ASX trade at ${fmtMoney(state.tradeSize)}</th>
+    <th>US shares</th>
+    <th class="col-rate sortable ${sortCls('fx')}" data-sort="fx">FX spread</th>
+    <th>Perks &amp; promos</th>
+  </tr>`;
+
+  const bestFee = rows.reduce((mn, r) => Math.min(mn, r.fee ?? Infinity), Infinity);
+  const pg = paginate(rows, 'iPage');
+  $('invest-body').innerHTML = pg.slice
+    .map((r, i) => {
+      const b = r.b;
+      const chess = b.chess
+        ? '<span class="badge badge-chess" title="Shares held in your own name on the CHESS register">CHESS</span>'
+        : '';
+      const monthly = b.monthlyFeeDesc
+        ? `<span class="badge badge-elig" title="Ongoing account fee">${esc(b.monthlyFeeDesc)}</span>`
+        : '';
+      const eff = r.fee != null && r.fee > 0 ? `<span class="fee-sub">${((r.fee / state.tradeSize) * 100).toFixed(2)}% of trade</span>` : '';
+      const promo = b.promo
+        ? `<span class="badge badge-promo">🎁 promo</span> <span title="${esc(b.promo.text)}">${esc(b.promo.text.slice(0, 70))}</span>`
+        : '<span style="color:var(--muted)">—</span>';
+      return `<tr data-key="${esc(keyOf(b))}">
+        <td class="col-rank">${pg.start + i + 1}</td>
+        <td>${bankCell(b)}</td>
+        <td class="rate-cell ${r.fee != null && r.fee === bestFee ? 'rate-max' : ''}">${fmtFee(r.fee)}${eff}</td>
+        <td class="product-cell">${esc(b.usFeeDesc || '—')}${chess ? ' ' + chess : ''}${monthly ? ' ' + monthly : ''}</td>
+        <td class="rate-cell">${b.fxPct != null ? (b.fxPct * 100).toFixed(2) + '%' : '—'}</td>
+        <td><div class="cond-cell">${promo}</div></td>
+      </tr>`;
+    })
+    .join('');
+  $('invest-empty').hidden = rows.length > 0;
+  renderPager($('invest-pager'), pg, 'iPage');
+
+  const dates = state.brokers.map(b => b.verified).filter(Boolean).sort();
+  $('invest-verified').textContent = state.brokers.length
+    ? `Broker fees and promos are hand-verified (last check: ${dates[dates.length - 1] || '—'}) — not from Open Banking APIs. Promos are the broker's advertised offers; conditions always apply.`
+    : '';
+}
+
+function renderInvestStats(rows) {
+  const cheapest = rows.filter(r => r.fee != null).reduce((m, r) => (m == null || r.fee < m.fee ? r : m), null);
+  $('stat-cheap-asx-label').textContent = `Cheapest ASX trade at ${fmtMoney(state.tradeSize)}`;
+  $('stat-cheap-asx').textContent = cheapest ? fmtFee(cheapest.fee) : '—';
+  $('stat-cheap-asx-sub').textContent = cheapest ? cheapest.b.name : '';
+  $('stat-chess').textContent = state.brokers.filter(b => b.chess).length;
+  const promos = state.brokers.filter(b => b.promo);
+  $('stat-promos').textContent = promos.length;
+  $('stat-promos-sub').textContent = promos.length ? `at ${promos.slice(0, 3).map(b => b.name).join(', ')}${promos.length > 3 ? '…' : ''}` : '';
+  $('stat-brokers').textContent = state.brokers.length;
+  $('stat-brokers-sub').textContent = 'AU retail share-trading platforms';
+}
+
 // ---------- Stats & histogram ----------
 function renderStats(savRows) {
   const topRow = savRows.length
@@ -467,7 +580,8 @@ function findProduct(key) {
   return (
     state.data.savings.find(p => keyOf(p) === key) ||
     state.data.termDeposits.find(p => keyOf(p) === key) ||
-    (state.data.mortgages || []).find(p => keyOf(p) === key)
+    (state.data.mortgages || []).find(p => keyOf(p) === key) ||
+    state.brokers.find(p => keyOf(p) === key)
   );
 }
 
@@ -502,12 +616,38 @@ function bandLabel(min, max) {
 
 function renderDrawer(p) {
   $('drawer-bank').innerHTML = bankCell(p);
-  $('drawer-product').textContent = p.name;
+  $('drawer-product').textContent = p.asxTiers ? 'Share trading' : p.name;
   const link = $('drawer-link');
   if (p.url) { link.href = p.url; link.style.display = ''; } else { link.style.display = 'none'; }
+  // Brokers aren't CDR data holders — no live refresh for them.
+  $('drawer-refresh').style.display = p.asxTiers ? 'none' : '';
 
   let body = '';
-  if (p.lending) {
+  if (p.asxTiers) {
+    const fee = asxFeeAt(p, state.tradeSize);
+    body += `<div class="rate-summary">
+      <div class="cell"><div class="k">ASX trade at ${fmtMoney(state.tradeSize)}</div><div class="v">${fmtFee(fee)}</div>
+        <div class="s">${fee != null && fee > 0 ? ((fee / state.tradeSize) * 100).toFixed(2) + '% of trade' : ''}</div></div>
+      <div class="cell"><div class="k">Holding type</div><div class="v" style="font-size:16px">${p.chess ? 'CHESS-sponsored' : 'Custodial'}</div>
+        <div class="s">${p.chess ? 'shares in your name' : 'held via a custodian'}</div></div>
+    </div>`;
+    body += `<div class="drawer-section-title">Fees</div>
+      <table class="detail-table"><tbody>
+        <tr><td>ASX brokerage</td><td class="note">${esc(p.asxFeeDesc || '—')}</td></tr>
+        <tr><td>US brokerage</td><td class="note">${esc(p.usFeeDesc || 'No US trading')}</td></tr>
+        <tr><td>FX conversion</td><td class="note">${p.fxPct != null ? (p.fxPct * 100).toFixed(2) + '%' : '—'}</td></tr>
+        <tr><td>Account fee</td><td class="note">${esc(p.monthlyFeeDesc || 'None')}</td></tr>
+        <tr><td>Markets</td><td class="note">${esc((p.markets || []).join(', '))}</td></tr>
+      </tbody></table>`;
+    if (p.promo) {
+      body += `<div class="drawer-section-title">Current sign-up offer</div>
+        <div class="cond-block">${esc(p.promo.text)}${p.promo.conditions ? `<br><span style="font-size:12px">${esc(p.promo.conditions)}</span>` : ''}</div>`;
+    }
+    if (p.notes) body += `<p class="note" style="color:var(--ink-2);font-size:13px">${esc(p.notes)}</p>`;
+    if (p.verified) {
+      body += `<p class="note" style="color:var(--muted);font-size:12px;margin-top:14px">Hand-verified ${esc(p.verified)} from the broker's published pricing.</p>`;
+    }
+  } else if (p.lending) {
     const lvrLabel = state.mLvr ? `≤${state.mLvr}% LVR` : 'any LVR';
     const purposeLabel = state.mPurpose === 'INVESTMENT' ? 'investor' : 'owner-occupier';
     const repayLabel = state.mRepay === 'INTEREST_ONLY' ? 'interest only' : 'P&I';
@@ -660,6 +800,9 @@ async function liveRefresh() {
 
 // ---------- Report a dodgy rate (on-site modal -> /api/report) ----------
 function currentFilterSummary() {
+  if (state.section === 'invest') {
+    return `Brokers at ${fmtMoney(state.tradeSize)} trade size`;
+  }
   if (state.section === 'loans') {
     return `${state.mRateType === 'FIXED' ? fmtLoanTerm(state.mFixedMonths) : 'Variable'} / ${
       state.mPurpose === 'INVESTMENT' ? 'Investor' : 'Owner-occupier'
@@ -746,14 +889,19 @@ function toast(msg) {
 // ---------- Render root ----------
 // Any filter/sort change resets to page 1; pager controls pass false.
 function renderAll(resetPages = true) {
-  if (resetPages) state.sPage = state.tdPage = state.mPage = 1;
+  if (resetPages) state.sPage = state.tdPage = state.mPage = state.iPage = 1;
   const savRows = savingsRows();
   renderSavings(savRows);
   renderTd(tdRows());
   renderStats(savRows);
   renderLoans(loansRows());
   renderLoanStats();
+  const iRows = investRows();
+  renderInvest(iRows);
+  renderInvestStats(iRows);
 }
+
+const SECTION_HASH = { loans: '#home-loans', invest: '#investing' };
 
 function setSection(name) {
   state.section = name;
@@ -762,10 +910,11 @@ function setSection(name) {
   }
   $('section-deposits').hidden = name !== 'deposits';
   $('section-loans').hidden = name !== 'loans';
+  $('section-invest').hidden = name !== 'invest';
   history.replaceState(
     null,
     '',
-    name === 'loans' ? '#home-loans' : state.tab === 'td' ? '#td' : location.pathname + location.search
+    SECTION_HASH[name] || (state.tab === 'td' ? '#td' : location.pathname + location.search)
   );
 }
 
@@ -877,6 +1026,42 @@ $('loans-search').addEventListener('input', e => {
   renderAll();
 });
 
+// Investing controls
+$('trade-input').addEventListener('input', e => {
+  const digits = e.target.value.replace(/[^\d]/g, '');
+  const n = parseInt(digits || '0', 10);
+  if (digits) e.target.value = n.toLocaleString('en-AU');
+  state.tradeSize = n > 0 ? n : 2000;
+  for (const c of document.querySelectorAll('#trade-chips .chip')) {
+    c.classList.toggle('active', parseInt(c.dataset.amount, 10) === state.tradeSize);
+  }
+  renderAll();
+});
+$('trade-chips').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  const n = parseInt(chip.dataset.amount, 10);
+  $('trade-input').value = n.toLocaleString('en-AU');
+  for (const c of document.querySelectorAll('#trade-chips .chip')) c.classList.toggle('active', c === chip);
+  state.tradeSize = n;
+  renderAll();
+});
+$('invest-search').addEventListener('input', e => {
+  state.iSearch = e.target.value.trim().toLowerCase();
+  renderAll();
+});
+$('chess-toggle').addEventListener('change', e => { state.iChess = e.target.checked; renderAll(); });
+$('promo-toggle').addEventListener('change', e => { state.iPromo = e.target.checked; renderAll(); });
+$('invest-head').addEventListener('click', e => {
+  const th = e.target.closest('th.sortable');
+  if (!th) return;
+  const key = th.dataset.sort;
+  const s = state.iSort;
+  if (s.key === key) s.dir = -s.dir;
+  else { s.key = key; s.dir = 1; }
+  renderAll();
+});
+
 $('loans-head').addEventListener('click', e => {
   const th = e.target.closest('th.sortable');
   if (!th) return;
@@ -908,7 +1093,7 @@ $('td-head').addEventListener('click', e => {
   renderAll();
 });
 
-for (const bodyId of ['savings-body', 'td-body', 'loans-body']) {
+for (const bodyId of ['savings-body', 'td-body', 'loans-body', 'invest-body']) {
   $(bodyId).addEventListener('click', e => {
     const tr = e.target.closest('tr[data-key]');
     if (tr) openDrawer(tr.dataset.key);
@@ -943,6 +1128,7 @@ if (urlTheme === 'dark' || urlTheme === 'light') {
 }
 if (location.hash === '#td') setTab('td');
 if (location.hash === '#home-loans') setSection('loans');
+if (location.hash === '#investing') setSection('invest');
 
 load();
 

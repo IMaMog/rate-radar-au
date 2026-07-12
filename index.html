@@ -41,6 +41,7 @@
     <nav class="wrap site-nav" aria-label="Site sections">
       <button class="nav-link active" data-section="deposits">Savings &amp; term deposits</button>
       <button class="nav-link" data-section="loans">Home loans</button>
+      <button class="nav-link" data-section="invest">Investing</button>
       <!-- future: About, Blog, Methodology -->
     </nav>
   </header>
@@ -229,6 +230,72 @@
           <div class="pager" id="loans-pager"></div>
         </section>
       </div><!-- /section-loans -->
+
+      <div id="section-invest" hidden>
+        <section class="stats stats-loans" aria-label="Share trading headline figures">
+          <div class="stat-tile">
+            <span class="stat-label" id="stat-cheap-asx-label">Cheapest ASX trade</span>
+            <span class="stat-value" id="stat-cheap-asx">—</span>
+            <span class="stat-sub" id="stat-cheap-asx-sub"></span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-label">CHESS-sponsored</span>
+            <span class="stat-value" id="stat-chess">—</span>
+            <span class="stat-sub">your name on the shares</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-label">Sign-up promos live</span>
+            <span class="stat-value" id="stat-promos">—</span>
+            <span class="stat-sub" id="stat-promos-sub"></span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-label">Brokers</span>
+            <span class="stat-value" id="stat-brokers">—</span>
+            <span class="stat-sub" id="stat-brokers-sub"></span>
+          </div>
+        </section>
+
+        <section class="controls" aria-label="Broker filters">
+          <div class="control-row loans-controls">
+            <label class="balance-field">
+              <span class="field-label">Typical trade size</span>
+              <span class="currency-input">
+                <span class="currency-sign">$</span>
+                <input id="trade-input" type="text" inputmode="numeric" value="2,000" autocomplete="off" />
+              </span>
+            </label>
+            <div class="chip-row" id="trade-chips">
+              <button class="chip" data-amount="500">$500</button>
+              <button class="chip" data-amount="1000">$1k</button>
+              <button class="chip active" data-amount="2000">$2k</button>
+              <button class="chip" data-amount="5000">$5k</button>
+              <button class="chip" data-amount="10000">$10k</button>
+              <button class="chip" data-amount="25000">$25k</button>
+            </div>
+            <input id="invest-search" class="search-input" type="search" placeholder="Search broker…" />
+            <label class="toggle-field" title="Shares held in your own name on the ASX CHESS register, not pooled in a custodian">
+              <input type="checkbox" id="chess-toggle" />
+              <span>CHESS-sponsored only</span>
+            </label>
+            <label class="toggle-field">
+              <input type="checkbox" id="promo-toggle" />
+              <span>Has sign-up promo</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="table-panel" role="region" aria-label="Broker comparison">
+          <div class="table-scroll">
+            <table class="rate-table" id="invest-table">
+              <thead id="invest-head"></thead>
+              <tbody id="invest-body"></tbody>
+            </table>
+          </div>
+          <p class="empty-note" id="invest-empty" hidden>No brokers match your filters.</p>
+          <div class="pager" id="invest-pager"></div>
+        </section>
+        <p class="verify-note" id="invest-verified"></p>
+      </div><!-- /section-invest -->
 
       <footer class="site-footer">
         <p>

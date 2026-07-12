@@ -65,6 +65,19 @@ Home loans (`lendingRates`):
 - The **Offset account** filter uses the product's published `features` (OFFSET), shown
   as a badge in the table.
 
+## Investing section (brokers)
+
+Unlike deposits and home loans, **there is no CDR/Open Banking feed for brokerage** — the
+Investing section runs on a hand-curated dataset, `data/brokers.json` (~20 AU retail
+platforms): ASX fee tiers, US brokerage, FX spread, CHESS vs custodial, monthly fees and
+currently-advertised sign-up promos, each with a `verified` date and source URLs. The UI
+computes the ASX fee at the user's typical trade size from `asxTiers` (a tier with both
+`flat` and `pct` means "pct with a $flat minimum").
+
+To refresh it, ask Claude to re-run the broker research pass (web-verify each broker's
+pricing page against the JSON) — promos churn monthly, so monthly-ish is the right cadence.
+The on-site "dodgy rate" reporting flow covers corrections between passes.
+
 ## Data issues
 
 The site's "Spot a dodgy rate?" pill (and the per-product link in each drawer) opens an

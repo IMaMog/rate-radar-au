@@ -1,0 +1,707 @@
+[
+ {
+  "id": "commsec",
+  "name": "CommSec",
+  "url": "https://www.commsec.com.au/",
+  "active": true,
+  "chess": true,
+  "markets": [
+   "ASX",
+   "US",
+   "20+ intl"
+  ],
+  "asxTiers": [
+   {
+    "upTo": 1000,
+    "flat": 5,
+    "pct": null
+   },
+   {
+    "upTo": 3000,
+    "flat": 10,
+    "pct": null
+   },
+   {
+    "upTo": 10000,
+    "flat": 19.95,
+    "pct": null
+   },
+   {
+    "upTo": 25000,
+    "flat": 29.95,
+    "pct": null
+   },
+   {
+    "upTo": null,
+    "flat": null,
+    "pct": 0.0012
+   }
+  ],
+  "asxFeeDesc": "$5 up to $1k; $10 up to $3k; $19.95 up to $10k; $29.95 up to $25k; 0.12% above (online, settled to CDIA)",
+  "usFeeDesc": "US$5 or 0.12%, whichever is greater",
+  "fxPct": 0.0055,
+  "monthlyFeeDesc": null,
+  "promo": null,
+  "verified": "2026-07-12",
+  "sources": [
+   "https://www.commsec.com.au/support/rates-and-fees.html"
+  ],
+  "notes": "Lowest tiers require settlement to a CDIA or margin loan; settling to another bank account costs more. CHESS-sponsored. No monthly fee."
+ },
+ {
+  "id": "nabtrade",
+  "name": "nabtrade",
+  "url": "https://www.nabtrade.com.au/",
+  "active": true,
+  "chess": true,
+  "markets": [
+   "ASX",
+   "US",
+   "UK",
+   "HK",
+   "DE"
+  ],
+  "asxTiers": [
+   {
+    "upTo": 1000,
+    "flat": 9.95,
+    "pct": null
+   },
+   {
+    "upTo": 5000,
+    "flat": 14.95,
+    "pct": null
+   },
+   {
+    "upTo": 20000,
+    "flat": 19.95,
+    "pct": null
+   },
+   {
+    "upTo": null,
+    "flat": null,
+    "pct": 0.0011
+   }
+  ],
+  "asxFeeDesc": "$9.95 up to $1k; $14.95 up to $5k; $19.95 up to $20k; 0.11% above",
+  "usFeeDesc": "Same tiers as ASX in AUD, plus FX",
+  "fxPct": 0.008,
+  "monthlyFeeDesc": null,
+  "promo": null,
+  "verified": "2026-07-12",
+  "sources": [
+   "https://www.nabtrade.com.au/investor/pricing"
+  ],
+  "notes": "FX spread 0.50%–0.80% depending on trade (worst case recorded). CHESS-sponsored ASX; international custodial. No monthly fee."
+ },
+ {
+  "id": "cmc-invest",
+  "name": "CMC Markets Invest",
+  "url": "https://www.cmcmarkets.com/en-au/stockbroking",
+  "active": true,
+  "chess": true,
+  "markets": [
+   "ASX",
+   "US",
+   "UK",
+   "CA",
+   "JP"
+  ],
+  "asxTiers": [
+   {
+    "upTo": 1000,
+    "flat": 0,
+    "pct": null
+   },
+   {
+    "upTo": 11000,
+    "flat": 11,
+    "pct": null
+   },
+   {
+    "upTo": null,
+    "flat": null,
+    "pct": 0.001
+   }
+  ],
+  "asxFeeDesc": "$0 on first buy up to $1k per security per day (buys only); otherwise $11 or 0.10%, whichever is greater",
+  "usFeeDesc": "US$0 brokerage (also $0 UK, CA, JP)",
+  "fxPct": 0.006,
+  "monthlyFeeDesc": null,
+  "promo": null,
+  "verified": "2026-07-12",
+  "sources": [
+   "https://www.cmcmarkets.com/en-au/stockbroking/pricing"
+  ],
+  "notes": "The famous $0 tier is buys only, one security per day, up to $1k. CHESS-sponsored ASX; international custodial. No monthly fee."
+ },
+ {
+  "id": "bell-direct",
+  "name": "Bell Direct",
+  "url": "https://www.belldirect.com.au/smarter",
+  "active": true,
+  "chess": true,
+  "markets": [
+   "ASX",
+   "US"
+  ],
+  "asxTiers": [
+   {
+    "upTo": 1000,
+    "flat": 5,
+    "pct": null
+   },
+   {
+    "upTo": 3000,
+    "flat": 10,
+    "pct": null
+   },
+   {
+    "upTo": 10000,
+    "flat": 15,
+    "pct": null
+   },
+   {
+    "upTo": 25000,
+    "flat": 25,
+    "pct": null
+   },
+   {
+    "upTo": null,
+    "flat": null,
+    "pct": 0.001
+   }
+  ],
+  "asxFeeDesc": "$5 up to $1k; $10 up to $3k; $15 up to $10k; $25 up to $25k; 0.10% above",
+  "usFeeDesc": "US$0 brokerage on US trades",
+  "fxPct": 0.006,
+  "monthlyFeeDesc": null,
+  "promo": null,
+  "verified": "2026-07-12",
+  "sources": [
+   "https://www.belldirect.com.au/smarter/fees"
+  ],
+  "notes": "Tiered rates require settlement to Bell's Direct Investment Account. Frequent-trader discounts from the 11th trade each month. CHESS-sponsored."
+ },
+ {
+  "id": "vanguard-pi",
+  "name": "Vanguard Personal Investor",
+  "url": "https://www.vanguard.com.au/personal/invest-with-us",
+  "active": true,
+  "chess": false,
+  "markets": [
+   "ASX"
+  ],
+  "asxTiers": [
+   {
+    "upTo": null,
+    "flat": 9,
+    "pct": null
+   }
+  ],
+  "asxFeeDesc": "$9 flat for ASX shares (ASX 300) and Vanguard ETF sells; $0 on Vanguard ETF buys",
+  "usFeeDesc": null,
+  "fxPct": null,
+  "monthlyFeeDesc": "0.10% p.a. on ASX direct shares only",
+  "promo": null,
+  "verified": "2026-07-12",
+  "sources": [
+   "https://www.finder.com.au/share-trading/vanguard-share-trading"
+  ],
+  "notes": "Custodial (no individual HIN). ASX only. $0 brokerage buying Vanguard ETFs; account fee applies to direct shares only. Official fees page is JS-rendered; cross-checked from three current review sites."
+ },
+ {
+  "id": "stake",
+  "name": "Stake",
+  "url": "https://hellostake.com/au/pricing",
+  "active": true,
+  "chess": true,
+  "markets": [
+   "ASX",
+   "US"
+  ],
+  "asxTiers": [
+   {
+    "upTo": 30000,
+    "flat": 3,
+    "pct": null
+   },
+   {
+    "upTo": null,
+    "flat": null,
+    "pct": 0.0001
+   }
+  ],
+  "asxFeeDesc": "A$3 per trade up to A$30,000; 0.01% of trade value above",
+  "usFeeDesc": "US$3 per trade up to US$30,000; 0.01% above",
+  "fxPct": 0.0055,
+  "monthlyFeeDesc": null,
+  "promo": {
+   "text": "$10 trading credit for funding your AU account and a free US stock for funding your US account within 24 hours of opening",
+   "conditions": "Fund within 24 hours of account opening. Seen on a comparison site (Mar 2026), not on Stake's own pricing page — confirm before relying on it",
+   "source": "https://www.finder.com.au/share-trading/stake"
+  },
+  "verified": "2026-07-12",
+  "sources": [
+   "https://hellostake.com/au/pricing",
+   "https://www.finder.com.au/share-trading/stake"
+  ],
+  "notes": "FX fee is 55 bps charged on AUD/USD transfers only (min US$2), not per US trade. Optional Stake Black subscription ~A$14–20/mo. ASX holdings CHESS-sponsored; US holdings custodial."
+ },
+ {
+  "id": "selfwealth",
+  "name": "Selfwealth (by Syfe)",
+  "url": "https://www.selfwealth.com.au/pricing",
+  "active": true,
+  "chess": true,
+  "markets": [
+   "ASX",
+   "US",
+   "HK"
+  ],
+  "asxTiers": [
+   {
+    "upTo": null,
+    "flat": 9.5,
+    "pct": null
+   }
+  ],
+  "asxFeeDesc": "A$9.50 flat per trade, any size",
+  "usFeeDesc": "US$9.50 flat per trade; HK trades HK$88 flat",
+  "fxPct": null,
+  "monthlyFeeDesc": null,
+  "promo": null,
+  "verified": "2026-07-12",
+  "sources": [
+   "https://www.selfwealth.com.au/pricing",
+   "https://www.syfe.com/magazine/syfes-acquisition-of-selfwealth/"
+  ],
+  "notes": "Acquired by Syfe (May 2025), still open to AU retail with unchanged pricing. FX fee not displayed on pricing page. Optional Premium A$29/mo. CHESS-sponsored under your own HIN."
+ },
+ {
+  "id": "superhero",
+  "name": "Superhero",
+  "url": "https://www.superhero.com.au/pricing",
+  "active": true,
+  "chess": false,
+  "markets": [
+   "ASX",
+   "US"
+  ],
+  "asxTiers": [
+   {
+    "upTo": 20000,
+    "flat": 2,
+    "pct": null
+   },
+   {
+    "upTo": null,
+    "flat": null,
+    "pct": 0.0001
+   }
+  ],
+  "asxFeeDesc": "A$2 per trade up to A$20,000; 0.01% above",
+  "usFeeDesc": "US$2 per trade up to US$20,000; 0.01% above",
+  "fxPct": 0.005,
+  "monthlyFeeDesc": null,
+  "promo": null,
+  "verified": "2026-07-12",
+  "sources": [
+   "https://www.superhero.com.au/pricing"
+  ],
+  "notes": "Custodial: ASX shares held by Superhero Nominees (beneficial ownership), not CHESS-sponsored. 50 bps FX on transfers, nil per-trade FX."
+ },
+ {
+  "id": "pearler",
+  "name": "Pearler",
+  "url": "https://pearler.com/pricing",
+  "active": true,
+  "chess": true,
+  "markets": [
+   "ASX",
+   "US"
+  ],
+  "asxTiers": [
+   {
+    "upTo": null,
+    "flat": 6.5,
+    "pct": null
+   }
+  ],
+  "asxFeeDesc": "A$6.50 flat per trade; A$5.50 with prepay credit packs",
+  "usFeeDesc": "A$6.50 flat per trade (charged in AUD)",
+  "fxPct": 0.005,
+  "monthlyFeeDesc": null,
+  "promo": null,
+  "verified": "2026-07-12",
+  "sources": [
+   "https://pearler.com/pricing"
+  ],
+  "notes": "ASX shares/ETFs CHESS-sponsored; US holdings custodial. Prepay packs save A$1 per trade. Micro-investing product A$2/mo separate."
+ },
+ {
+  "id": "sharesies",
+  "name": "Sharesies (AU)",
+  "url": "https://sharesies.com.au/pricing",
+  "active": true,
+  "chess": false,
+  "markets": [
+   "ASX",
+   "US",
+   "NZ"
+  ],
+  "asxTiers": [
+   {
+    "upTo": 316,
+    "flat": null,
+    "pct": 0.019
+   },
+   {
+    "upTo": null,
+    "flat": 6,
+    "pct": null
+   }
+  ],
+  "asxFeeDesc": "1.9% of order value, capped at A$6",
+  "usFeeDesc": "1.9% of order value, capped at US$5; NZ orders capped at NZ$25",
+  "fxPct": 0.006,
+  "monthlyFeeDesc": "Optional plans A$5–$20/mo that pre-cover a set amount of orders",
+  "promo": null,
+  "verified": "2026-07-12",
+  "sources": [
+   "https://sharesies.com.au/pricing"
+  ],
+  "notes": "Custodial (Sharesies Nominee), not CHESS-sponsored. Wallet interest at RBA cash rate minus 0.25%."
+ },
+ {
+  "id": "webull-au",
+  "name": "Webull",
+  "url": "https://www.webull.com.au/pricing",
+  "active": true,
+  "chess": true,
+  "markets": [
+   "ASX",
+   "US",
+   "HK"
+  ],
+  "asxTiers": [
+   {
+    "upTo": null,
+    "flat": 1,
+    "pct": 0.0003
+   }
+  ],
+  "asxFeeDesc": "0.03% (min A$1); ASX ETFs $0 brokerage",
+  "usFeeDesc": "US$0 commission on US shares and ETFs",
+  "fxPct": 0.005,
+  "monthlyFeeDesc": null,
+  "promo": {
+   "text": "Up to 100,000 bonus Qantas Points when switching to Webull (1 point per A$1 on eligible balances)",
+   "conditions": "New/switching customers; based on eligible deposits and transfers; ends 30 Sep 2026; T&Cs apply",
+   "source": "https://www.webull.com.au/"
+  },
+  "verified": "2026-07-12",
+  "sources": [
+   "https://www.webull.com.au/pricing",
+   "https://www.webull.com.au/"
+  ],
+  "notes": "ASX holdings CHESS-sponsored (own HIN); US/HK custodial. US$0 commission current since April 2026. Optional streaming data subscriptions extra."
+ },
+ {
+  "id": "moomoo-au",
+  "name": "Moomoo",
+  "url": "https://www.moomoo.com/au/pricing",
+  "active": true,
+  "chess": true,
+  "markets": [
+   "ASX",
+   "US"
+  ],
+  "asxTiers": [
+   {
+    "upTo": null,
+    "flat": 3,
+    "pct": 0.0003
+   }
+  ],
+  "asxFeeDesc": "0.03% (min A$3, GST incl.)",
+  "usFeeDesc": "US$0.99 per trade",
+  "fxPct": null,
+  "monthlyFeeDesc": null,
+  "promo": {
+   "text": "Up to 38 free fractional shares (pool incl. NVIDIA/Apple/Tesla) plus 30 days of $0 brokerage on AU and US stocks",
+   "conditions": "New AU clients (SA residents excluded); tiered by deposit ($1k/$3k/$8k); balance must be maintained 30 days; ends 31 Jul 2026",
+   "source": "https://www.moomoo.com/au/events/welcome_rewards"
+  },
+  "verified": "2026-07-12",
+  "sources": [
+   "https://www.moomoo.com/au/pricing",
+   "https://www.moomoo.com/au/events/welcome_rewards"
+  ],
+  "notes": "CHESS-sponsored ASX (own HIN). $0 subscription and inactivity fees. FX margin not disclosed on pricing page."
+ },
+ {
+  "id": "tiger-au",
+  "name": "Tiger Brokers",
+  "url": "https://www.itiger.com/au/commissions",
+  "active": true,
+  "chess": true,
+  "markets": [
+   "ASX",
+   "US",
+   "HK",
+   "SG"
+  ],
+  "asxTiers": [
+   {
+    "upTo": null,
+    "flat": 3,
+    "pct": 0.0003
+   }
+  ],
+  "asxFeeDesc": "0.03% (min A$3, GST incl.)",
+  "usFeeDesc": "US$2 up to 200 shares/order, then US$0.01/share",
+  "fxPct": 0.0055,
+  "monthlyFeeDesc": null,
+  "promo": {
+   "text": "Welcome offer: $20 trading credit on any deposit, 4 zero-brokerage trades per month, and no FX fees on the first A$2,000 exchanged monthly",
+   "conditions": "New clients; free trades waive minimum brokerage only. Confirmed via comparison sites (Jul 2026) — Tiger's own promo pages blocked automated checks; confirm on sign-up",
+   "source": "https://www.finder.com.au/share-trading/tiger-brokers-review"
+  },
+  "verified": "2026-07-12",
+  "sources": [
+   "https://www.finder.com.au/share-trading/tiger-brokers-review",
+   "https://wise.com/au/blog/tiger-brokers-review"
+  ],
+  "notes": "Now CHESS-sponsored with unique HIN (migrated from custodial). Fees cross-checked from two review sites; official site blocked automated fetches."
+ },
+ {
+  "id": "etoro-au",
+  "name": "eToro",
+  "url": "https://www.etoro.com/au/trading/fees/",
+  "active": true,
+  "chess": false,
+  "markets": [
+   "ASX",
+   "US",
+   "UK",
+   "EU"
+  ],
+  "asxTiers": [
+   {
+    "upTo": null,
+    "flat": 3,
+    "pct": null
+   }
+  ],
+  "asxFeeDesc": "US$2 per trade (≈A$3, charged in USD); ETFs $0 commission",
+  "usFeeDesc": "US$2 per trade; ETFs $0",
+  "fxPct": 0.015,
+  "monthlyFeeDesc": null,
+  "promo": null,
+  "verified": "2026-07-12",
+  "sources": [
+   "https://www.etoro.com/au/trading/fees/"
+  ],
+  "notes": "Custodial, not CHESS-sponsored; USD-denominated account. AUD conversion fee varies (~1.5%, reduced to 0.75% with a recurring investment plan) — biggest cost for AU users. US$10/mo inactivity fee after 12 months. SMSF cashback offer exists for SMSF accounts only (not listed as a retail promo)."
+ },
+ {
+  "id": "ibkr-au",
+  "name": "Interactive Brokers",
+  "url": "https://www.interactivebrokers.com.au/",
+  "active": true,
+  "chess": false,
+  "markets": [
+   "ASX",
+   "US",
+   "Global"
+  ],
+  "asxTiers": [
+   {
+    "upTo": null,
+    "flat": 6,
+    "pct": 0.0008
+   }
+  ],
+  "asxFeeDesc": "0.08% (min A$6) on fixed pricing; cheaper tiered pricing for volume",
+  "usFeeDesc": "US$0.005/share (min US$1/order)",
+  "fxPct": 0.00002,
+  "monthlyFeeDesc": null,
+  "promo": null,
+  "verified": "2026-07-12",
+  "sources": [
+   "https://psyfimoney.com/au/reviews/interactive-brokers-review-australia/"
+  ],
+  "notes": "Custodial for ASX (no HIN). FX at near-interbank rate + 0.002% commission — by far the cheapest FX of any AU-accessible broker. 1 free withdrawal/month. Official pricing pages blocked automated fetches; cross-checked via current reviews."
+ },
+ {
+  "id": "betashares-direct",
+  "name": "Betashares Direct",
+  "url": "https://www.betashares.com.au/direct/pricing",
+  "active": true,
+  "chess": false,
+  "markets": [
+   "ASX"
+  ],
+  "asxTiers": [
+   {
+    "upTo": null,
+    "flat": 0,
+    "pct": null
+   }
+  ],
+  "asxFeeDesc": "$0 brokerage on ASX ETFs and 400+ ASX shares",
+  "usFeeDesc": null,
+  "fxPct": null,
+  "monthlyFeeDesc": null,
+  "promo": null,
+  "verified": "2026-07-12",
+  "sources": [
+   "https://www.betashares.com.au/direct/pricing"
+  ],
+  "notes": "Custodial (no HIN). ASX only. Transfer-out fee up to $9.50 per security; interest on uninvested cash retained by Betashares. Optional managed portfolios cost extra."
+ },
+ {
+  "id": "totality",
+  "name": "Totality (ex-Saxo)",
+  "url": "https://www.totality.com.au/rates-and-conditions/stocks/stocks-pricing",
+  "active": true,
+  "chess": true,
+  "markets": [
+   "ASX",
+   "US",
+   "Global"
+  ],
+  "asxTiers": [
+   {
+    "upTo": null,
+    "flat": 3,
+    "pct": 0.0008
+   }
+  ],
+  "asxFeeDesc": "0.08% (min $3) on the default custody account; CHESS/HIN account 0.10% (min $14.90)",
+  "usFeeDesc": "0.08% (min US$1)",
+  "fxPct": 0.0045,
+  "monthlyFeeDesc": "0.12% p.a. custody fee on international holdings only",
+  "promo": null,
+  "verified": "2026-07-12",
+  "sources": [
+   "https://www.totality.com.au/rates-and-conditions/stocks/stocks-pricing"
+  ],
+  "notes": "Saxo Australia rebranded to Totality Wealth in April 2026. Default account is custodial; CHESS-sponsored account available at higher brokerage. Active-trader tier is cheaper."
+ },
+ {
+  "id": "ig-au",
+  "name": "IG Australia",
+  "url": "https://www.ig.com/au/share-trading/charges",
+  "active": true,
+  "chess": false,
+  "markets": [
+   "ASX",
+   "US",
+   "Global"
+  ],
+  "asxTiers": [
+   {
+    "upTo": null,
+    "flat": 0,
+    "pct": null
+   }
+  ],
+  "asxFeeDesc": "$0 brokerage on online ASX share and ETF trades",
+  "usFeeDesc": "$0 commission with instant currency conversion",
+  "fxPct": 0.007,
+  "monthlyFeeDesc": null,
+  "promo": null,
+  "verified": "2026-07-12",
+  "sources": [
+   "https://www.finder.com.au/share-trading/ig-share-trading"
+  ],
+  "notes": "Share trading account, not CFDs. Custodial — no HIN. The $0 US pricing requires the default instant-FX setting (0.7% spread is where they earn). Official pages blocked automated checks; cross-verified via two current comparison sites."
+ },
+ {
+  "id": "go-markets",
+  "name": "Shares by GO Markets",
+  "url": "https://www.gomarkets.com/en-au",
+  "active": true,
+  "chess": true,
+  "markets": [
+   "ASX"
+  ],
+  "asxTiers": [
+   {
+    "upTo": 100000,
+    "flat": 7.7,
+    "pct": null
+   },
+   {
+    "upTo": null,
+    "flat": null,
+    "pct": 0.0005
+   }
+  ],
+  "asxFeeDesc": "$7.70 flat up to $100k; 0.05% above",
+  "usFeeDesc": null,
+  "fxPct": null,
+  "monthlyFeeDesc": null,
+  "promo": {
+   "text": "Free ASX brokerage period when you transfer an existing HIN to GO Markets",
+   "conditions": "Requires a full account transfer; exact free-trade count varies by transfer size — confirm with GO Markets before relying on it",
+   "source": "https://thebull.com.au/brokers/go-markets/"
+  },
+  "verified": "2026-07-12",
+  "sources": [
+   "https://www.compareforexbrokers.com/reviews/go-markets-review/"
+  ],
+  "notes": "ASX-only share product, separate from GO's CFD business. Pricing cross-verified via review sites; CHESS status inferred from the HIN-transfer offer."
+ },
+ {
+  "id": "westpac-st",
+  "name": "Westpac Share Trading",
+  "url": "https://www.westpac.com.au/personal-banking/share-trading/",
+  "active": true,
+  "chess": true,
+  "markets": [
+   "ASX",
+   "US",
+   "Global"
+  ],
+  "asxTiers": [
+   {
+    "upTo": 1000,
+    "flat": 4.95,
+    "pct": null
+   },
+   {
+    "upTo": 3000,
+    "flat": 9.95,
+    "pct": null
+   },
+   {
+    "upTo": 10000,
+    "flat": 19.95,
+    "pct": null
+   },
+   {
+    "upTo": 28000,
+    "flat": 29.95,
+    "pct": null
+   },
+   {
+    "upTo": null,
+    "flat": null,
+    "pct": 0.0011
+   }
+  ],
+  "asxFeeDesc": "$4.95 up to $1k; $9.95 up to $3k; $19.95 up to $10k; $29.95 up to $28k; 0.11% above (settling via Westpac Cash Investment Account)",
+  "usFeeDesc": "Published on application; not on public pages",
+  "fxPct": null,
+  "monthlyFeeDesc": "$63.50/yr inactivity fee on the international account only",
+  "promo": null,
+  "verified": "2026-07-12",
+  "sources": [
+   "https://www.westpac.com.au/personal-banking/share-trading/"
+  ],
+  "notes": "CHESS-sponsored. Cheapest tiers require settlement via a Westpac Cash Investment Account; external settlement costs $29.95 or 0.29%. ANZ Share Investing and Macquarie Online Trading are closed to new retail customers and excluded."
+ }
+]

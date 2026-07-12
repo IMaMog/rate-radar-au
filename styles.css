@@ -349,6 +349,11 @@ td.rate-max { font-weight: 650; }
 [data-theme='dark'] .badge-intro { color: #b7d3f6; }
 .badge-nostrings { border: 1px solid var(--grid); color: var(--good); }
 .badge-elig { border: 1px solid var(--baseline); color: var(--ink-2); }
+.badge-chess { border: 1px solid var(--grid); color: var(--good); }
+.badge-promo { background: var(--accent-soft); color: var(--accent-strong); }
+[data-theme='dark'] .badge-promo { color: #b7d3f6; }
+.fee-sub { display: block; font-size: 11px; font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
+.verify-note { color: var(--muted); font-size: 12px; margin: 10px 4px 0; }
 .cond-cell {
   color: var(--ink-2); font-size: 13px;
   max-width: 330px;
