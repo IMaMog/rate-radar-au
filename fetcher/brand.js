@@ -53,7 +53,7 @@ const GREEN_ADDON_RX = /green|sustainab|solar|\beco\b|clean energy/i;
 // Loans only specific people can get (bank staff, essential workers,
 // veterans / defence DHOAS). "Essentials" (a basic no-frills loan) is fine —
 // only "essential worker" is restricted.
-const RESTRICTED_LOAN_RX = /\bstaff\b|employee|essential worker|veteran|dhoas/i;
+const RESTRICTED_LOAN_RX = /\bstaff\b|employee|essential worker|veteran|dhoas|firefighter/i;
 
 export async function fetchBrandProducts(brand, { detailConcurrency = 5 } = {}) {
   const lists = await Promise.all(

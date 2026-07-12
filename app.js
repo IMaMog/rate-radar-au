@@ -30,7 +30,55 @@ const state = {
   mTerms: [],
   liveBrands: new Set(), // brands refreshed live this session
   drawerKey: null,
+  // Pagination
+  pageSize: 10,
+  sPage: 1,
+  tdPage: 1,
+  mPage: 1,
 };
+
+// ---------- Pagination ----------
+const PAGE_SIZES = [10, 25, 50, 100];
+
+function paginate(rows, pageKey) {
+  const maxPage = Math.max(1, Math.ceil(rows.length / state.pageSize));
+  state[pageKey] = Math.min(Math.max(1, state[pageKey]), maxPage);
+  const page = state[pageKey];
+  const start = (page - 1) * state.pageSize;
+  return { slice: rows.slice(start, start + state.pageSize), page, maxPage, total: rows.length, start };
+}
+
+function renderPager(el, pg, pageKey) {
+  if (pg.total <= PAGE_SIZES[0]) { el.innerHTML = ''; return; }
+  const end = Math.min(pg.start + state.pageSize, pg.total);
+  el.innerHTML = `
+    <span class="pg-status">Showing ${pg.start + 1}–${end} of ${pg.total}</span>
+    <span class="pager-right">
+      <label class="page-size-wrap">Per page
+        <select class="page-size" data-pagekey="${pageKey}">
+          ${PAGE_SIZES.map(s => `<option value="${s}" ${s === state.pageSize ? 'selected' : ''}>${s}</option>`).join('')}
+        </select>
+      </label>
+      <button class="pg-btn" data-pagekey="${pageKey}" data-pg="prev" ${pg.page <= 1 ? 'disabled' : ''} aria-label="Previous page">‹</button>
+      <span class="pg-status">Page ${pg.page} of ${pg.maxPage}</span>
+      <button class="pg-btn" data-pagekey="${pageKey}" data-pg="next" ${pg.page >= pg.maxPage ? 'disabled' : ''} aria-label="Next page">›</button>
+    </span>`;
+}
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.pg-btn[data-pg]');
+  if (!btn || btn.disabled) return;
+  const k = btn.dataset.pagekey;
+  state[k] += btn.dataset.pg === 'next' ? 1 : -1;
+  renderAll(false);
+});
+document.addEventListener('change', e => {
+  const sel = e.target.closest('.page-size');
+  if (!sel) return;
+  state.pageSize = parseInt(sel.value, 10);
+  state.sPage = state.tdPage = state.mPage = 1;
+  renderAll(false);
+});
 
 const keyOf = p => `${p.brandId}|${p.productId}`;
 const esc = s =>
@@ -164,7 +212,8 @@ function savingsRows() {
 
 function renderSavings(rows) {
   const maxRate = rows.reduce((m, r) => Math.max(m, r.parts.max), 0) || 1;
-  const html = rows
+  const pg = paginate(rows, 'sPage');
+  const html = pg.slice
     .map((r, i) => {
       const { p, parts } = r;
       const intro = parts.intro
@@ -176,7 +225,7 @@ function renderSavings(rows) {
         : `<span title="${esc(condText)}">${esc(condText)}</span>`;
       const barW = Math.max(4, Math.round((parts.max / maxRate) * 64));
       return `<tr data-key="${esc(keyOf(p))}">
-        <td class="col-rank">${i + 1}</td>
+        <td class="col-rank">${pg.start + i + 1}</td>
         <td>${bankCell(p)}</td>
         <td class="product-cell"><span class="product-name">${esc(p.name)}</span>${intro}${eligBadges(p)}</td>
         <td class="rate-cell rate-max">${fmtPct(parts.max)}<span class="rate-bar" style="width:${barW}px"></span></td>
@@ -187,6 +236,7 @@ function renderSavings(rows) {
     .join('');
   $('savings-body').innerHTML = html;
   $('savings-empty').hidden = rows.length > 0;
+  renderPager($('savings-pager'), pg, 'sPage');
   $('count-savings').textContent = `(${rows.length})`;
   $('at-balance-note').textContent = `at ${fmtMoney(state.balance)}`;
 
@@ -239,10 +289,11 @@ function renderTd(rows) {
   for (const m of state.tdTerms) {
     best[m] = rows.reduce((mx, r) => Math.max(mx, r.byTerm[m] ?? 0), 0);
   }
-  $('td-body').innerHTML = rows
+  const pg = paginate(rows, 'tdPage');
+  $('td-body').innerHTML = pg.slice
     .map(
       (r, i) => `<tr data-key="${esc(keyOf(r.p))}">
-      <td class="col-rank">${i + 1}</td>
+      <td class="col-rank">${pg.start + i + 1}</td>
       <td>${bankCell(r.p)}</td>
       <td class="product-cell"><span class="product-name">${esc(r.p.name)}</span>${eligBadges(r.p)}</td>
       ${state.tdTerms
@@ -256,6 +307,7 @@ function renderTd(rows) {
     )
     .join('');
   $('td-empty').hidden = rows.length > 0;
+  renderPager($('td-pager'), pg, 'tdPage');
   $('count-td').textContent = `(${rows.length})`;
 }
 
@@ -302,10 +354,11 @@ function renderLoans(rows) {
   </tr>`;
 
   const bestRate = rows.reduce((mn, r) => Math.min(mn, r.entry.rate), Infinity);
-  $('loans-body').innerHTML = rows
+  const pg = paginate(rows, 'mPage');
+  $('loans-body').innerHTML = pg.slice
     .map(
       (r, i) => `<tr data-key="${esc(keyOf(r.p))}">
-      <td class="col-rank">${i + 1}</td>
+      <td class="col-rank">${pg.start + i + 1}</td>
       <td>${bankCell(r.p)}</td>
       <td class="product-cell"><span class="product-name">${esc(r.p.name)}</span>${r.p.offset ? '<span class="badge badge-intro" title="Comes with an offset account">Offset</span>' : ''}</td>
       <td class="rate-cell ${r.entry.rate === bestRate ? 'rate-max' : ''}">${fmtPct(r.entry.rate)}</td>
@@ -314,6 +367,7 @@ function renderLoans(rows) {
     )
     .join('');
   $('loans-empty').hidden = rows.length > 0;
+  renderPager($('loans-pager'), pg, 'mPage');
 }
 
 function renderLoanStats() {
@@ -690,7 +744,9 @@ function toast(msg) {
 }
 
 // ---------- Render root ----------
-function renderAll() {
+// Any filter/sort change resets to page 1; pager controls pass false.
+function renderAll(resetPages = true) {
+  if (resetPages) state.sPage = state.tdPage = state.mPage = 1;
   const savRows = savingsRows();
   renderSavings(savRows);
   renderTd(tdRows());
@@ -701,7 +757,9 @@ function renderAll() {
 
 function setSection(name) {
   state.section = name;
-  $('section-select').value = name;
+  for (const l of document.querySelectorAll('.nav-link')) {
+    l.classList.toggle('active', l.dataset.section === name);
+  }
   $('section-deposits').hidden = name !== 'deposits';
   $('section-loans').hidden = name !== 'loans';
   history.replaceState(
@@ -786,7 +844,9 @@ for (const tab of document.querySelectorAll('.tab')) {
   tab.addEventListener('click', () => setTab(tab.dataset.tab));
 }
 
-$('section-select').addEventListener('change', e => setSection(e.target.value));
+for (const link of document.querySelectorAll('.nav-link')) {
+  link.addEventListener('click', () => setSection(link.dataset.section));
+}
 
 function segListener(id, apply) {
   $(id).addEventListener('click', e => {
