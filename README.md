@@ -40,7 +40,13 @@ data/snapshot.json  ──► static frontend (index.html + app.js)
 Banks publish rate data inconsistently; the normaliser applies these rules:
 
 - **Max rate = base + best bonus** at the selected balance, honouring balance tiers.
-  Distinct bonus schemes are never summed (avoids double-counting restated bonuses).
+  Distinct bonus schemes are never summed (avoids double-counting restated bonuses),
+  with two exceptions: schemes explicitly marked "additional rate" stack on the best
+  regular scheme (Virgin Money Lock Saver), and when a bank splits one offer into
+  component rows but states the combined figure in prose ("earn a total 5.35%"), the
+  stated total is used, capped at what the published components sum to (Up Saver).
+- Trivial conditions no account can violate ("balance must not fall below $0") do not
+  demote a variable rate from being the unconditional base (Westpac's pattern).
 - Bonuses worded as a **"total rate"** replace the base instead of stacking.
 - **Discretionary bonuses** ("selected customers", "from time to time") are excluded from
   rankings but still visible in the product drawer.

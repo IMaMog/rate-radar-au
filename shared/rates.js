@@ -128,6 +128,12 @@ const TOTAL_RATE_RX =
   /total (?:rate|interest)|inclusive of (?:the )?(?:standard|base)|includes (?:the )?(?:standard|base)/i;
 // Discretionary/targeted bonuses not generally available — excluded from ranking.
 const DISCRETIONARY_RX = /selected customers|from time to time|by invitation/i;
+// Conditions no savings account can actually violate — not real conditions.
+const TRIVIAL_COND_RX =
+  /not fall below \$0|above \$0 at all times|maintain(?:ed|s)? a positive balance/i;
+// Schemes explicitly marked as an ADDITIONAL rate stack on other bonuses
+// (e.g. Virgin Money's Lock Saver on top of its deposit bonus).
+const ADDITIVE_RX = /\badditional (?:variable )?(?:bonus )?(?:interest )?rate\b|\bextra (?:bonus |interest )?rate\b/i;
 
 /**
  * Compute the rate picture for a savings product at a given balance.
@@ -151,7 +157,7 @@ export function ratePartsAt(structures, balance = REF_BALANCE) {
     const r = schemeRateAt(rows, balance);
     if (r == null) continue;
     if (BASE_TYPES.has(type)) {
-      if (rows[0].cond) {
+      if (rows[0].cond && !TRIVIAL_COND_RX.test(rows[0].cond)) {
         // A "variable" rate with applicability conditions is conditional —
         // treat it like a total-style bonus, not an unconditional base.
         bonusGroups.push({ rate: r, text: rows[0].cond, isTotal: true });
@@ -177,10 +183,19 @@ export function ratePartsAt(structures, balance = REF_BALANCE) {
     if (!DISCRETIONARY_RX.test(g.full || g.text)) sumBonus += g.rate;
   }
 
-  let max = base, bonus = null, bonusConditions = null;
+  // Split out schemes explicitly marked "additional rate" — they stack on
+  // top of the best regular scheme rather than competing with it.
+  const additive = [];
+  const regular = [];
   for (const g of bonusGroups) {
     const full = g.full || g.text;
     if (DISCRETIONARY_RX.test(full)) continue;
+    (!g.isTotal && ADDITIVE_RX.test(full) ? additive : regular).push(g);
+  }
+
+  let max = base, bonus = null, bonusConditions = null;
+  for (const g of regular) {
+    const full = g.full || g.text;
     let candidate;
     // Banks that split one offer into stacking component rows usually state
     // the combined figure in prose ("Earn a total 5.35%...") — trust it,
@@ -198,6 +213,14 @@ export function ratePartsAt(structures, balance = REF_BALANCE) {
       bonus = candidate - (base ?? 0);
       bonusConditions = g.text || null;
     }
+  }
+
+  if (additive.length) {
+    const addSum = additive.reduce((s, g) => s + g.rate, 0);
+    max = (max ?? base ?? 0) + addSum;
+    bonus = max - (base ?? 0);
+    const texts = [bonusConditions, ...additive.map(g => g.text)].filter(Boolean);
+    bonusConditions = [...new Set(texts)].join(' + ') || null;
   }
 
   return { base, bonus, bonusConditions, intro, max };
