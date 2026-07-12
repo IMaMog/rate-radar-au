@@ -46,7 +46,8 @@
   "sources": [
    "https://www.commsec.com.au/support/rates-and-fees.html"
   ],
-  "notes": "Lowest tiers require settlement to a CDIA or margin loan; settling to another bank account costs more. CHESS-sponsored. No monthly fee."
+  "notes": "Lowest tiers require settlement to a CDIA or margin loan; settling to another bank account costs more. CHESS-sponsored. No monthly fee.",
+  "logo": "assets/brokers/commsec.png"
  },
  {
   "id": "nabtrade",
@@ -92,7 +93,8 @@
   "sources": [
    "https://www.nabtrade.com.au/investor/pricing"
   ],
-  "notes": "FX spread 0.50%–0.80% depending on trade (worst case recorded). CHESS-sponsored ASX; international custodial. No monthly fee."
+  "notes": "FX spread 0.50%–0.80% depending on trade (worst case recorded). CHESS-sponsored ASX; international custodial. No monthly fee.",
+  "logo": "assets/brokers/nabtrade.png"
  },
  {
   "id": "cmc-invest",
@@ -133,7 +135,8 @@
   "sources": [
    "https://www.cmcmarkets.com/en-au/stockbroking/pricing"
   ],
-  "notes": "The famous $0 tier is buys only, one security per day, up to $1k. CHESS-sponsored ASX; international custodial. No monthly fee."
+  "notes": "The famous $0 tier is buys only, one security per day, up to $1k. CHESS-sponsored ASX; international custodial. No monthly fee.",
+  "logo": "assets/brokers/cmc-invest.png"
  },
  {
   "id": "bell-direct",
@@ -181,7 +184,8 @@
   "sources": [
    "https://www.belldirect.com.au/smarter/fees"
   ],
-  "notes": "Tiered rates require settlement to Bell's Direct Investment Account. Frequent-trader discounts from the 11th trade each month. CHESS-sponsored."
+  "notes": "Tiered rates require settlement to Bell's Direct Investment Account. Frequent-trader discounts from the 11th trade each month. CHESS-sponsored.",
+  "logo": "assets/brokers/bell-direct.png"
  },
  {
   "id": "vanguard-pi",
@@ -208,7 +212,8 @@
   "sources": [
    "https://www.finder.com.au/share-trading/vanguard-share-trading"
   ],
-  "notes": "Custodial (no individual HIN). ASX only. $0 brokerage buying Vanguard ETFs; account fee applies to direct shares only. Official fees page is JS-rendered; cross-checked from three current review sites."
+  "notes": "Custodial (no individual HIN). ASX only. $0 brokerage buying Vanguard ETFs; account fee applies to direct shares only. Official fees page is JS-rendered; cross-checked from three current review sites.",
+  "logo": "assets/brokers/vanguard-pi.png"
  },
  {
   "id": "stake",
@@ -246,7 +251,8 @@
    "https://hellostake.com/au/pricing",
    "https://www.finder.com.au/share-trading/stake"
   ],
-  "notes": "FX fee is 55 bps charged on AUD/USD transfers only (min US$2), not per US trade. Optional Stake Black subscription ~A$14–20/mo. ASX holdings CHESS-sponsored; US holdings custodial."
+  "notes": "FX fee is 55 bps charged on AUD/USD transfers only (min US$2), not per US trade. Optional Stake Black subscription ~A$14–20/mo. ASX holdings CHESS-sponsored; US holdings custodial.",
+  "logo": "assets/brokers/stake.png"
  },
  {
   "id": "selfwealth",
@@ -276,7 +282,8 @@
    "https://www.selfwealth.com.au/pricing",
    "https://www.syfe.com/magazine/syfes-acquisition-of-selfwealth/"
   ],
-  "notes": "Acquired by Syfe (May 2025), still open to AU retail with unchanged pricing. FX fee not displayed on pricing page. Optional Premium A$29/mo. CHESS-sponsored under your own HIN."
+  "notes": "Acquired by Syfe (May 2025), still open to AU retail with unchanged pricing. FX fee not displayed on pricing page. Optional Premium A$29/mo. CHESS-sponsored under your own HIN.",
+  "logo": "assets/brokers/selfwealth.png"
  },
  {
   "id": "superhero",
@@ -309,7 +316,8 @@
   "sources": [
    "https://www.superhero.com.au/pricing"
   ],
-  "notes": "Custodial: ASX shares held by Superhero Nominees (beneficial ownership), not CHESS-sponsored. 50 bps FX on transfers, nil per-trade FX."
+  "notes": "Custodial: ASX shares held by Superhero Nominees (beneficial ownership), not CHESS-sponsored. 50 bps FX on transfers, nil per-trade FX.",
+  "logo": "assets/brokers/superhero.png"
  },
  {
   "id": "pearler",
@@ -337,7 +345,8 @@
   "sources": [
    "https://pearler.com/pricing"
   ],
-  "notes": "ASX shares/ETFs CHESS-sponsored; US holdings custodial. Prepay packs save A$1 per trade. Micro-investing product A$2/mo separate."
+  "notes": "ASX shares/ETFs CHESS-sponsored; US holdings custodial. Prepay packs save A$1 per trade. Micro-investing product A$2/mo separate.",
+  "logo": "assets/brokers/pearler.png"
  },
  {
   "id": "sharesies",
@@ -371,7 +380,8 @@
   "sources": [
    "https://sharesies.com.au/pricing"
   ],
-  "notes": "Custodial (Sharesies Nominee), not CHESS-sponsored. Wallet interest at RBA cash rate minus 0.25%."
+  "notes": "Custodial (Sharesies Nominee), not CHESS-sponsored. Wallet interest at RBA cash rate minus 0.25%.",
+  "logo": "assets/brokers/sharesies.png"
  },
  {
   "id": "webull-au",
@@ -405,7 +415,8 @@
    "https://www.webull.com.au/pricing",
    "https://www.webull.com.au/"
   ],
-  "notes": "ASX holdings CHESS-sponsored (own HIN); US/HK custodial. US$0 commission current since April 2026. Optional streaming data subscriptions extra."
+  "notes": "ASX holdings CHESS-sponsored (own HIN); US/HK custodial. US$0 commission current since April 2026. Optional streaming data subscriptions extra.",
+  "logo": "assets/brokers/webull-au.png"
  },
  {
   "id": "moomoo-au",
@@ -438,7 +449,8 @@
    "https://www.moomoo.com/au/pricing",
    "https://www.moomoo.com/au/events/welcome_rewards"
   ],
-  "notes": "CHESS-sponsored ASX (own HIN). $0 subscription and inactivity fees. FX margin not disclosed on pricing page."
+  "notes": "CHESS-sponsored ASX (own HIN). $0 subscription and inactivity fees. FX margin not disclosed on pricing page.",
+  "logo": "assets/brokers/moomoo-au.png"
  },
  {
   "id": "tiger-au",
@@ -473,7 +485,8 @@
    "https://www.finder.com.au/share-trading/tiger-brokers-review",
    "https://wise.com/au/blog/tiger-brokers-review"
   ],
-  "notes": "Now CHESS-sponsored with unique HIN (migrated from custodial). Fees cross-checked from two review sites; official site blocked automated fetches."
+  "notes": "Now CHESS-sponsored with unique HIN (migrated from custodial). Fees cross-checked from two review sites; official site blocked automated fetches.",
+  "logo": "assets/brokers/tiger-au.png"
  },
  {
   "id": "etoro-au",
@@ -503,7 +516,8 @@
   "sources": [
    "https://www.etoro.com/au/trading/fees/"
   ],
-  "notes": "Custodial, not CHESS-sponsored; USD-denominated account. AUD conversion fee varies (~1.5%, reduced to 0.75% with a recurring investment plan) — biggest cost for AU users. US$10/mo inactivity fee after 12 months. SMSF cashback offer exists for SMSF accounts only (not listed as a retail promo)."
+  "notes": "Custodial, not CHESS-sponsored; USD-denominated account. AUD conversion fee varies (~1.5%, reduced to 0.75% with a recurring investment plan) — biggest cost for AU users. US$10/mo inactivity fee after 12 months. SMSF cashback offer exists for SMSF accounts only (not listed as a retail promo).",
+  "logo": "assets/brokers/etoro-au.png"
  },
  {
   "id": "ibkr-au",
@@ -532,7 +546,8 @@
   "sources": [
    "https://psyfimoney.com/au/reviews/interactive-brokers-review-australia/"
   ],
-  "notes": "Custodial for ASX (no HIN). FX at near-interbank rate + 0.002% commission — by far the cheapest FX of any AU-accessible broker. 1 free withdrawal/month. Official pricing pages blocked automated fetches; cross-checked via current reviews."
+  "notes": "Custodial for ASX (no HIN). FX at near-interbank rate + 0.002% commission — by far the cheapest FX of any AU-accessible broker. 1 free withdrawal/month. Official pricing pages blocked automated fetches; cross-checked via current reviews.",
+  "logo": "assets/brokers/ibkr-au.png"
  },
  {
   "id": "betashares-direct",
@@ -559,7 +574,8 @@
   "sources": [
    "https://www.betashares.com.au/direct/pricing"
   ],
-  "notes": "Custodial (no HIN). ASX only. Transfer-out fee up to $9.50 per security; interest on uninvested cash retained by Betashares. Optional managed portfolios cost extra."
+  "notes": "Custodial (no HIN). ASX only. Transfer-out fee up to $9.50 per security; interest on uninvested cash retained by Betashares. Optional managed portfolios cost extra.",
+  "logo": "assets/brokers/betashares-direct.png"
  },
  {
   "id": "totality",
@@ -588,7 +604,8 @@
   "sources": [
    "https://www.totality.com.au/rates-and-conditions/stocks/stocks-pricing"
   ],
-  "notes": "Saxo Australia rebranded to Totality Wealth in April 2026. Default account is custodial; CHESS-sponsored account available at higher brokerage. Active-trader tier is cheaper."
+  "notes": "Saxo Australia rebranded to Totality Wealth in April 2026. Default account is custodial; CHESS-sponsored account available at higher brokerage. Active-trader tier is cheaper.",
+  "logo": "assets/brokers/totality.png"
  },
  {
   "id": "ig-au",
@@ -617,7 +634,8 @@
   "sources": [
    "https://www.finder.com.au/share-trading/ig-share-trading"
   ],
-  "notes": "Share trading account, not CFDs. Custodial — no HIN. The $0 US pricing requires the default instant-FX setting (0.7% spread is where they earn). Official pages blocked automated checks; cross-verified via two current comparison sites."
+  "notes": "Share trading account, not CFDs. Custodial — no HIN. The $0 US pricing requires the default instant-FX setting (0.7% spread is where they earn). Official pages blocked automated checks; cross-verified via two current comparison sites.",
+  "logo": "assets/brokers/ig-au.png"
  },
  {
   "id": "go-markets",
@@ -653,7 +671,8 @@
   "sources": [
    "https://www.compareforexbrokers.com/reviews/go-markets-review/"
   ],
-  "notes": "ASX-only share product, separate from GO's CFD business. Pricing cross-verified via review sites; CHESS status inferred from the HIN-transfer offer."
+  "notes": "ASX-only share product, separate from GO's CFD business. Pricing cross-verified via review sites; CHESS status inferred from the HIN-transfer offer.",
+  "logo": "assets/brokers/go-markets.png"
  },
  {
   "id": "westpac-st",
@@ -702,6 +721,7 @@
   "sources": [
    "https://www.westpac.com.au/personal-banking/share-trading/"
   ],
-  "notes": "CHESS-sponsored. Cheapest tiers require settlement via a Westpac Cash Investment Account; external settlement costs $29.95 or 0.29%. ANZ Share Investing and Macquarie Online Trading are closed to new retail customers and excluded."
+  "notes": "CHESS-sponsored. Cheapest tiers require settlement via a Westpac Cash Investment Account; external settlement costs $29.95 or 0.29%. ANZ Share Investing and Macquarie Online Trading are closed to new retail customers and excluded.",
+  "logo": "assets/brokers/westpac-st.png"
  }
 ]

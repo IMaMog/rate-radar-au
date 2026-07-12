@@ -109,7 +109,7 @@ async function load() {
       if (bres.ok) {
         state.brokers = (await bres.json())
           .filter(b => b.active !== false)
-          .map(b => ({ ...b, brandId: 'brokers', productId: b.id, bank: b.name, logo: null }));
+          .map(b => ({ ...b, brandId: 'brokers', productId: b.id, bank: b.name, logo: b.logo || null }));
       }
     } catch { /* keep [] */ }
     $('loading').hidden = true;
