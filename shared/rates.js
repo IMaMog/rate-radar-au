@@ -160,22 +160,39 @@ export function ratePartsAt(structures, balance = REF_BALANCE) {
       }
     } else if (type === 'BONUS') {
       // Some banks put an ISO duration (e.g. "P1M") where condition text belongs.
-      const texts = [rows[0].cond, rows[0].value, rows[0].info].filter(
+      // Prefer descriptive prose (value/info) over terse condition enums (cond).
+      const texts = [rows[0].value, rows[0].info, rows[0].cond].filter(
         t => t && !/^P[\dYMWD]+$/i.test(t.trim())
       );
-      bonusGroups.push({ rate: r, text: texts[0] || '' });
+      bonusGroups.push({ rate: r, text: texts[0] || '', full: texts.join(' ') });
     } else if (type === 'INTRODUCTORY') {
       const months = durationToMonths(rows[0].value);
       if (!intro || r > intro.rate) intro = { rate: r, months };
     }
   }
 
+  // Ceiling for text-stated totals: base plus every stacking bonus scheme.
+  let sumBonus = 0;
+  for (const g of bonusGroups) {
+    if (!DISCRETIONARY_RX.test(g.full || g.text)) sumBonus += g.rate;
+  }
+
   let max = base, bonus = null, bonusConditions = null;
   for (const g of bonusGroups) {
-    if (DISCRETIONARY_RX.test(g.text)) continue;
-    const candidate = g.isTotal || TOTAL_RATE_RX.test(g.text)
-      ? Math.max(base ?? 0, g.rate)
-      : (base ?? 0) + g.rate;
+    const full = g.full || g.text;
+    if (DISCRETIONARY_RX.test(full)) continue;
+    let candidate;
+    // Banks that split one offer into stacking component rows usually state
+    // the combined figure in prose ("Earn a total 5.35%...") — trust it,
+    // capped at what the published components can actually add up to.
+    const stated = full.match(/total\s+(?:of\s+)?(?:rate\s+of\s+)?(\d+(?:\.\d+)?)\s*%/i);
+    if (stated && parseFloat(stated[1]) / 100 >= g.rate) {
+      candidate = Math.max(base ?? 0, Math.min(parseFloat(stated[1]) / 100, (base ?? 0) + sumBonus));
+    } else if (g.isTotal || TOTAL_RATE_RX.test(full)) {
+      candidate = Math.max(base ?? 0, g.rate);
+    } else {
+      candidate = (base ?? 0) + g.rate;
+    }
     if (max == null || candidate > max) {
       max = candidate;
       bonus = candidate - (base ?? 0);
